@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dota 2 多账号面板</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f4f4f2;
+  --surface: #fcfcfb;
+  --surface-2: #efefec;
+  --border: #dddcd7;
+  --text: #0b0b0b;
+  --text-2: #52514e;
+  --muted: #8a8984;
+  --accent: #2a78d6;
+  --good: #1a7f37;
+  --bad: #c62828;
+  --good-bg: #e3f3e7;
+  --bad-bg: #fbe5e5;
+  --grid: #e7e6e2;
+  --hover: rgba(0,0,0,.05);
+  --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100;
+  --c5: #e87ba4; --c6: #008300; --c7: #6250d6; --c8: #e34948;
+  --seq0: #ecebe7; --seq1: #b7d3f6; --seq2: #6da7ec; --seq3: #2a78d6; --seq4: #184f95;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #111110; --surface: #1a1a19; --surface-2: #242422; --border: #353532;
+    --text: #f0efec; --text-2: #c3c2b7; --muted: #8d8c85; --accent: #3987e5;
+    --good: #4cc26a; --bad: #ef6b6b; --good-bg: #17301f; --bad-bg: #3a1a1a;
+    --grid: #2b2b29; --hover: rgba(255,255,255,.06);
+    --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500;
+    --c5: #d55181; --c6: #008300; --c7: #9085e9; --c8: #e66767;
+    --seq0: #262624; --seq1: #184f95; --seq2: #256abf; --seq3: #3987e5; --seq4: #86b6ef;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111110; --surface: #1a1a19; --surface-2: #242422; --border: #353532;
+  --text: #f0efec; --text-2: #c3c2b7; --muted: #8d8c85; --accent: #3987e5;
+  --good: #4cc26a; --bad: #ef6b6b; --good-bg: #17301f; --bad-bg: #3a1a1a;
+  --grid: #2b2b29; --hover: rgba(255,255,255,.06);
+  --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500;
+  --c5: #d55181; --c6: #008300; --c7: #9085e9; --c8: #e66767;
+  --seq0: #262624; --seq1: #184f95; --seq2: #256abf; --seq3: #3987e5; --seq4: #86b6ef;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; font: 14px/1.5 system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 16px; }
+header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+header h1 { font-size: 20px; margin: 0; flex: 1; }
+button, select, input { font: inherit; color: var(--text); }
+button { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 5px 12px; cursor: pointer; }
+button:hover { background: var(--surface-2); }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+select, input[type=date], input[type=text], input[type=number], textarea { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; color: var(--text); }
+textarea { width: 100%; height: 90px; font-family: ui-monospace, monospace; font-size: 13px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+.card h3 { margin: 0 0 10px; font-size: 15px; }
+.muted { color: var(--muted); }
+.sub { color: var(--text-2); font-size: 12px; }
+.err { color: var(--bad); }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* accounts */
+.accs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.acc { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; cursor: pointer; user-select: none; background: var(--surface); }
+.acc.off { opacity: .45; }
+.acc img { width: 28px; height: 28px; border-radius: 50%; }
+.acc .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.acc .nm { font-weight: 600; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acc .x { color: var(--muted); padding: 0 2px; }
+.acc .x:hover { color: var(--bad); }
+
+/* filters */
+.filters { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+.filters label.f { display: flex; align-items: center; gap: 6px; color: var(--text-2); font-size: 13px; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 4px 10px; border-right: 1px solid var(--border); }
+.seg button:last-child { border-right: 0; }
+.seg button.on { background: var(--accent); color: #fff; }
+.ms { position: relative; }
+.ms > button { min-width: 110px; text-align: left; }
+.ms > button::after { content: " ▾"; color: var(--muted); }
+.ms .pop { display: none; position: absolute; z-index: 20; top: 100%; left: 0; margin-top: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.18); width: 260px; max-width: calc(100vw - 32px); }
+.ms.open .pop { display: block; }
+.ms .pop input { width: calc(100% - 16px); margin: 8px; }
+.ms .opts { max-height: 300px; overflow: auto; padding: 0 4px 6px; }
+.ms .opt { display: flex; align-items: center; gap: 6px; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.ms .opt:hover { background: var(--hover); }
+.ms .opt img { width: 32px; height: 18px; object-fit: cover; border-radius: 2px; }
+.ms .opt .cnt { margin-left: auto; color: var(--muted); font-size: 12px; }
+.ms .acts { display: flex; gap: 6px; padding: 6px 8px; border-top: 1px solid var(--border); }
+.ms .acts button { padding: 2px 8px; font-size: 12px; }
+
+/* tabs */
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 12px; overflow-x: auto; }
+.tabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 8px 14px; color: var(--text-2); white-space: nowrap; }
+.tabs button.on { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+
+/* kpis */
+.kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+.kpi .v { font-size: clamp(18px, 2.2vw, 24px); white-space: nowrap; font-weight: 650; font-variant-numeric: tabular-nums; }
+.kpi .l { color: var(--text-2); font-size: 12px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 12px; }
+@media (max-width: 480px) { .grid2 { grid-template-columns: 1fr; } }
+
+/* tables */
+.tw { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th { color: var(--text-2); font-weight: 500; font-size: 12px; position: sticky; top: 0; background: var(--surface); }
+th.s { cursor: pointer; }
+th.s:hover { color: var(--text); }
+th.s.on::after { content: attr(data-dir); color: var(--accent); }
+td.n, th.n { text-align: right; }
+tr.click { cursor: pointer; }
+tr.click:hover td { background: var(--hover); }
+tr.own td { background: var(--hover); font-weight: 600; }
+.hi { width: 48px; height: 27px; object-fit: cover; border-radius: 3px; vertical-align: middle; }
+.hs { width: 36px; height: 20px; object-fit: cover; border-radius: 2px; vertical-align: middle; }
+.it { width: 30px; height: 22px; object-fit: cover; border-radius: 2px; vertical-align: middle; margin-right: 1px; background: var(--surface-2); }
+.it.nt { border-radius: 50%; width: 22px; }
+.hero { display: inline-flex; align-items: center; gap: 8px; }
+.tag { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.tag.w { color: var(--good); background: var(--good-bg); }
+.tag.l { color: var(--bad); background: var(--bad-bg); }
+.bar { display: inline-block; width: 60px; height: 6px; background: var(--surface-2); border-radius: 3px; vertical-align: middle; margin-left: 6px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.dots { display: inline-flex; gap: 3px; flex-wrap: wrap; }
+.dots span { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; color: var(--text-2); }
+.dots span i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.pager { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 10px; }
+.detail td { background: var(--surface-2); white-space: normal; padding: 12px; }
+.detail table td, .detail table th { background: transparent; }
+.team-h { font-weight: 600; margin: 10px 0 4px; }
+.team-h.rad { color: var(--good); }
+.team-h.dire { color: var(--bad); }
+
+/* charts */
+.chart { width: 100%; }
+.chart svg { display: block; overflow: visible; }
+.chart text { fill: var(--text-2); font-size: 11px; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--text-2); margin-bottom: 6px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+.hit { fill: transparent; }
+.hit:hover { fill: var(--hover); }
+.cell:hover { stroke: var(--text); stroke-width: 1.5; }
+#tip { position: fixed; z-index: 50; pointer-events: none; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 9px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.18); white-space: pre; display: none; max-width: 320px; }
+.posbar { display: grid; grid-template-columns: 60px 1fr 110px; gap: 8px; align-items: center; margin: 6px 0; font-size: 13px; }
+.posbar .t { height: 14px; background: var(--surface-2); border-radius: 0 4px 4px 0; overflow: hidden; }
+.posbar .t i { display: block; height: 100%; background: var(--accent); border-radius: 0 4px 4px 0; }
+.herogrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.herogrid .hc { border: 1px solid var(--border); border-radius: 8px; padding: 8px; cursor: pointer; }
+.herogrid .hc:hover { background: var(--hover); }
+.herogrid img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 4px; }
+.strip { display: flex; gap: 3px; flex-wrap: wrap; }
+.strip span { width: 14px; height: 22px; border-radius: 3px; font-size: 10px; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.strip .w { background: var(--good); }
+.strip .l { background: var(--bad); }
+.note { font-size: 12px; color: var(--text-2); background: var(--surface-2); border-radius: 6px; padding: 6px 10px; margin-bottom: 10px; }
+.empty { text-align: center; color: var(--muted); padding: 40px 0; }
+details summary { cursor: pointer; color: var(--text-2); font-size: 13px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Dota 2 多账号面板</h1>
+    <span id="status" class="sub"></span>
+    <button id="themeBtn" title="切换主题">主题:自动</button>
+    <button id="setBtn">账号 / 设置</button>
+  </header>
+
+  <div class="card" id="setup" hidden>
+    <h3>账号列表</h3>
+    <p class="sub">每行一个账号,支持 Steam64 ID、Steam32 ID 或 OpenDota/Stratz/Dotabuff 链接。数据来自 OpenDota 公开 API,本地缓存于浏览器。</p>
+    <textarea id="ids" placeholder="76561198000000001&#10;123456789"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button class="primary" id="go">加载账号</button>
+      <label class="f sub">OpenDota API Key(可选,提高限额)<input type="text" id="apikey" style="width:260px"></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <strong>账号</strong>
+      <button id="accAll">全选</button>
+      <button id="accNone">全不选</button>
+      <button id="refresh">刷新数据</button>
+      <span class="sub">点击切换选中;× 移除</span>
+    </div>
+    <div class="accs" id="accs"></div>
+  </div>
+
+  <div class="card">
+    <div class="filters" id="filters">
+      <label class="f">时间
+        <select id="fRange">
+          <option value="7">近 7 天</option>
+          <option value="30">近 30 天</option>
+          <option value="90">近 90 天</option>
+          <option value="180">近半年</option>
+          <option value="365" selected>近一年</option>
+          <option value="0">全部</option>
+          <option value="custom">自定义</option>
+        </select>
+      </label>
+      <span id="fCustom" class="row" hidden>
+        <input type="date" id="fFrom"> – <input type="date" id="fTo">
+      </span>
+      <div class="ms" id="fHero"></div>
+      <div class="ms" id="fPos"></div>
+      <div class="ms" id="fMode"></div>
+      <div class="ms" id="fLobby"></div>
+      <label class="f">组队
+        <span class="seg" id="fParty">
+          <button data-v="" class="on">全部</button><button data-v="solo">单排</button><button data-v="party">组队</button>
+        </span>
+      </label>
+      <label class="f">结果
+        <span class="seg" id="fResult">
+          <button data-v="" class="on">全部</button><button data-v="w">胜</button><button data-v="l">负</button>
+        </span>
+      </label>
+      <button id="fReset">重置筛选</button>
+    </div>
+  </div>
+
+  <nav class="tabs" id="tabs">
+    <button data-t="overview" class="on">总览</button>
+    <button data-t="heroes">英雄</button>
+    <button data-t="peers">队友</button>
+    <button data-t="activity">活跃度</button>
+    <button data-t="trends">趋势</button>
+    <button data-t="matches">比赛</button>
+  </nav>
+
+  <main id="view"><div class="empty">在「账号 / 设置」中添加账号开始使用</div></main>
+</div>
+<div id="tip"></div>
+
+<script>
+'use strict';
+const API = 'https://api.opendota.com/api';
+const CDN = 'https://cdn.cloudflare.steamstatic.com';
+const STEAM64_BASE = 76561197960265728n;
+const DAY = 86400;
+const CACHE_TTL = 6 * 3600 * 1000;
+const MATCH_FIELDS = ['match_id', 'player_slot', 'radiant_win', 'duration', 'game_mode', 'lobby_type',
+  'hero_id', 'start_time', 'kills', 'deaths', 'assists', 'party_size', 'lane_role', 'is_roaming',
+  'gold_per_min', 'xp_per_min', 'last_hits', 'hero_damage', 'tower_damage', 'leaver_status', 'average_rank'];
+
+const MODE_ZH = { 0: '未知', 1: '全英雄选择', 2: '队长模式', 3: '随机征召', 4: '单一征召', 5: '全部随机', 6: '新手',
+  7: '夜魇暗潮', 8: '反队长模式', 9: '贪魔', 10: '教程', 11: '中路模式', 12: '生疏模式', 13: '有限英雄', 14: '比赛',
+  15: '自定义', 16: '队长征召', 17: '平衡征召', 18: '技能征召', 19: '活动', 20: '全部随机死亡竞赛', 21: '1v1 中路',
+  22: '全英雄选择', 23: '加速模式', 24: '突变模式', 25: '新手教练' };
+const LOBBY_ZH = { 0: '普通匹配', 1: '练习赛', 2: '锦标赛', 3: '教程', 4: '合作对抗机器人', 5: '组队天梯', 6: '单排天梯',
+  7: '天梯', 8: '1v1 中路', 9: '勇士联赛', 10: '本地机器人', 11: '观战', 12: '活动', 13: '挑战赛', 14: '新玩家', 15: '精选' };
+const POS_ZH = { 1: '1 号位 优势路核心', 2: '2 号位 中路', 3: '3 号位 劣势路核心', 4: '4 号位 游走辅助', 5: '5 号位 辅助', 0: '未知(未解析)' };
+const MEDALS = ['', '先锋', '卫士', '中军', '统帅', '传奇', '万古流芳', '超凡入圣', '冠绝一世'];
+const WEEKDAYS = ['一', '二', '三', '四', '五', '六', '日'];
+
+// ---------- utils ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pct = (w, g) => g ? (w / g * 100).toFixed(1) + '%' : '-';
+const fix = (v, d = 1) => (v == null || isNaN(v)) ? '-' : Number(v).toFixed(d);
+const fmtDur = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+const fmtDate = t => { const d = new Date(t * 1000); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+const fmtTime = t => { const d = new Date(t * 1000); return `${fmtDate(t)} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const ago = t => { const s = Date.now() / 1000 - t; if (s < 3600) return Math.max(1, Math.floor(s / 60)) + ' 分钟前'; if (s < DAY) return Math.floor(s / 3600) + ' 小时前'; if (s < 30 * DAY) return Math.floor(s / DAY) + ' 天前'; return fmtDate(t); };
+const rankName = rt => { if (!rt) return '无段位'; const m = Math.floor(rt / 10), s = rt % 10; return MEDALS[m] ? MEDALS[m] + (m < 8 && s ? ' ' + s : '') : String(rt); };
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { } };
+const kdaOf = (k, d, a) => (k + a) / Math.max(1, d);
+
+function toAccountId(line) {
+  const m = line.match(/\d{6,17}/);
+  if (!m) return null;
+  const n = BigInt(m[0]);
+  return (n > STEAM64_BASE ? n - STEAM64_BASE : n).toString();
+}
+
+// ---------- storage (IndexedDB) ----------
+const idb = (() => {
+  let dbp;
+  const open = () => dbp ??= new Promise((res, rej) => {
+    const r = indexedDB.open('d2panel', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('kv');
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  return {
+    async get(k) {
+      try {
+        const db = await open();
+        return await new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); });
+      } catch { return undefined; }
+    },
+    async set(k, v) {
+      try {
+        const db = await open();
+        await new Promise((res, rej) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); });
+      } catch { }
+    },
+  };
+})();
+
+// ---------- API with concurrency limit + retry ----------
+let inflight = 0;
+const queue = [];
+function limited(fn) {
+  return new Promise((res, rej) => {
+    queue.push({ fn, res, rej });
+    pump();
+  });
+}
+function pump() {
+  while (inflight < 3 && queue.length) {
+    const { fn, res, rej } = queue.shift();
+    inflight++;
+    fn().then(res, rej).finally(() => { inflight--; pump(); });
+  }
+}
+const memo = new Map();
+async function api(path, params = {}) {
+  const u = new URL(API + path);
+  for (const [k, v] of Object.entries(params)) {
+    if (v == null || v === '') continue;
+    (Array.isArray(v) ? v : [v]).forEach(x => u.searchParams.append(k, x));
+  }
+  const key = lsGet('d2.apikey', '');
+  if (key) u.searchParams.set('api_key', key);
+  const url = u.toString();
+  if (memo.has(url)) return memo.get(url);
+  const p = limited(async () => {
+    for (let attempt = 0; ; attempt++) {
+      const r = await fetch(url);
+      if (r.status === 429 && attempt < 4) { await new Promise(s => setTimeout(s, 1500 * (attempt + 1))); continue; }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }
+  });
+  memo.set(url, p);
+  p.catch(() => memo.delete(url));
+  return p;
+}
+
+// ---------- state ----------
+const S = {
+  accounts: [],         // {id, profile, raw, matches, loading, error, ts}
+  selected: new Set(lsGet('d2.selected', [])),
+  tab: 'overview',
+  f: { range: '365', from: '', to: '', heroes: new Set(), pos: new Set(), modes: new Set(), lobbies: new Set(), party: '', result: '' },
+  heroSort: { k: 'games', d: -1 },
+  peerSort: { k: 'with_games', d: -1 },
+  matchSort: { k: 'start_time', d: -1 },
+  page: 0,
+  expanded: null,
+  peerMin: 3,
+  trend: { metric: 'wr', gran: 'auto', split: false },
+};
+let HEROES = {};   // id -> {name, short}
+let ITEMS = {};    // id -> {img, dname}
+
+const accIndex = id => S.accounts.findIndex(a => a.id === id);
+const accColor = id => { const i = accIndex(id); return i >= 0 && i < 8 ? `var(--c${i + 1})` : 'var(--muted)'; };
+const accName = id => S.accounts.find(a => a.id === id)?.profile?.profile?.personaname || id;
+const heroName = id => HEROES[id]?.name ?? `#${id}`;
+const heroImg = (id, cls = 'hi') => HEROES[id] ? `<img class="${cls}" loading="lazy" src="${CDN}/apps/dota2/images/dota_react/heroes/${HEROES[id].short}.png" alt="">` : '';
+
+// STRATZ gives the exact position; for OpenDota data it is estimated from lane + farm
+// (OpenDota only exposes lane_role for parsed matches).
+function estPos(m) {
+  if (m.position) return m.position;
+  if (m.lane_role == null) return 0;
+  if (m.is_roaming) return 4;
+  const lhpm = m.last_hits / Math.max(1, m.duration / 60);
+  const core = lhpm >= 3;
+  switch (m.lane_role) {
+    case 1: return core ? 1 : 5;
+    case 2: return 2;
+    case 3: return core ? 3 : 4;
+    case 4: return core ? 1 : 4;
+    default: return 0;
+  }
+}
+
+function normalize(m, acc) {
+  const radiant = m.player_slot < 128;
+  return {
+    ...m, acc, radiant,
+    win: radiant === m.radiant_win,
+    pos: estPos(m),
+    kda: kdaOf(m.kills, m.deaths, m.assists),
+  };
+}
+
+// ---------- STRATZ (through tools/stratz-proxy.mjs) ----------
+let STRATZ_ACCOUNTS = new Set();
+const STRATZ_PAGE = 100;
+const STRATZ_MODES = ['NONE', 'ALL_PICK', 'CAPTAINS_MODE', 'RANDOM_DRAFT', 'SINGLE_DRAFT', 'ALL_RANDOM', 'INTRO', 'THE_DIRETIDE',
+  'REVERSE_CAPTAINS_MODE', 'THE_GREEVILING', 'TUTORIAL', 'MID_ONLY', 'LEAST_PLAYED', 'NEW_PLAYER_POOL', 'COMPENDIUM_MATCHMAKING',
+  'CUSTOM', 'CAPTAINS_DRAFT', 'BALANCED_DRAFT', 'ABILITY_DRAFT', 'EVENT', 'ALL_RANDOM_DEATH_MATCH', 'SOLO_MID', 'ALL_PICK_RANKED',
+  'TURBO', 'MUTATION'];
+const STRATZ_LOBBIES = { UNRANKED: 0, PRACTICE: 1, TOURNAMENT: 2, TUTORIAL: 3, COOP_VS_BOTS: 4, TEAM_MATCH: 5, SOLO_QUEUE: 6,
+  RANKED: 7, SOLO_MID: 8, BATTLE_CUP: 9, LOCAL_BOTS: 10, SPECTATOR: 11, EVENT: 12, GAUNTLET: 13, NEW_PLAYER: 14, FEATURED: 15 };
+const STRATZ_LANES = { SAFE_LANE: 1, MID_LANE: 2, OFF_LANE: 3, JUNGLE: 4 };
+const sMode = v => typeof v === 'number' ? v : Math.max(0, STRATZ_MODES.indexOf(v));
+const sLobby = v => typeof v === 'number' ? v : STRATZ_LOBBIES[v] ?? -1;
+const sPos = v => +(String(v ?? '').match(/POSITION_(\d)/)?.[1] ?? 0);
+
+const Q_MATCHES = `query ($id: Long!, $take: Int!, $skip: Int!) {
+  player(steamAccountId: $id) {
+    steamAccount { name avatar seasonRank }
+    matches(request: { take: $take, skip: $skip }) {
+      id startDateTime durationSeconds gameMode lobbyType didRadiantWin
+      players {
+        steamAccountId isRadiant partyId heroId position lane kills deaths assists
+        goldPerMinute experiencePerMinute numLastHits heroDamage towerDamage
+        steamAccount { name }
+      }
+    }
+  }
+}`;
+const Q_MATCH = `query ($id: Long!) {
+  match(id: $id) {
+    id startDateTime durationSeconds gameMode lobbyType didRadiantWin radiantNetworthLeads radiantExperienceLeads
+    players {
+      steamAccountId isRadiant heroId level kills deaths assists numLastHits numDenies goldPerMinute experiencePerMinute
+      networth heroDamage towerDamage heroHealing item0Id item1Id item2Id item3Id item4Id item5Id neutral0Id
+      steamAccount { name seasonRank }
+    }
+  }
+}`;
+
+async function detectStratz() {
+  if (!location.protocol.startsWith('http')) return;
+  try {
+    const r = await fetch('/stratz/accounts');
+    if (r.ok) STRATZ_ACCOUNTS = new Set((await r.json()).accounts.map(String));
+  } catch { }
+}
+
+async function stratz(account, query, variables) {
+  const r = await fetch(`/stratz/graphql?account=${encodeURIComponent(account)}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query, variables }),
+  });
+  const j = await r.json().catch(() => null);
+  const errs = j?.errors?.map(e => e.message).join('; ');
+  if (!r.ok || !j?.data) throw new Error('Stratz: ' + (errs || j?.error || 'HTTP ' + r.status));
+  if (errs) console.warn('Stratz partial errors:', errs);
+  return j.data;
+}
+
+// Converts a STRATZ match into the same shape as an OpenDota player-match row.
+function stratzToRaw(m, id, names) {
+  const me = m.players?.find(p => p.steamAccountId === id);
+  if (!me) return null;
+  for (const p of m.players) if (p.steamAccountId && p.steamAccount?.name) names[p.steamAccountId] = p.steamAccount.name;
+  return {
+    match_id: m.id, src: 'stratz',
+    player_slot: me.isRadiant ? 0 : 128, radiant_win: m.didRadiantWin,
+    duration: m.durationSeconds, start_time: m.startDateTime,
+    game_mode: sMode(m.gameMode), lobby_type: sLobby(m.lobbyType), hero_id: me.heroId,
+    kills: me.kills, deaths: me.deaths, assists: me.assists,
+    party_size: me.partyId != null ? m.players.filter(p => p.partyId === me.partyId && p.isRadiant === me.isRadiant).length : 1,
+    position: sPos(me.position), lane_role: STRATZ_LANES[me.lane] ?? null, is_roaming: me.lane === 'ROAMING',
+    gold_per_min: me.goldPerMinute, xp_per_min: me.experiencePerMinute, last_hits: me.numLastHits,
+    hero_damage: me.heroDamage, tower_damage: me.towerDamage,
+    // [accountId, 1 = same team / 0 = enemy] for every other identified player, used for exact teammate stats
+    mates: m.players.filter(p => p.steamAccountId && p.steamAccountId !== id).map(p => [p.steamAccountId, p.isRadiant === me.isRadiant ? 1 : 0]),
+  };
+}
+
+// Pages through the account's STRATZ history, newest first, stopping once it reaches stopAt.
+async function stratzMatches(acc, stopAt) {
+  const id = Number(acc.id), out = [], names = {};
+  let profile = null;
+  for (let skip = 0; ; skip += STRATZ_PAGE) {
+    const d = await stratz(acc.id, Q_MATCHES, { id, take: STRATZ_PAGE, skip });
+    if (skip === 0) profile = d.player?.steamAccount ?? null;
+    const page = d.player?.matches ?? [];
+    for (const m of page) { const r = stratzToRaw(m, id, names); if (r) out.push(r); }
+    $('#status').textContent = `Stratz:${profile?.name || acc.id} 已获取 ${out.length} 场…`;
+    if (page.length < STRATZ_PAGE || (stopAt && page.some(m => m.startDateTime <= stopAt))) break;
+  }
+  return { matches: out, names, profile };
+}
+
+function stratzDetail(m) {
+  const players = m.players.map(p => ({
+    account_id: p.steamAccountId, personaname: p.steamAccount?.name, rank_tier: p.steamAccount?.seasonRank,
+    hero_id: p.heroId, isRadiant: p.isRadiant, player_slot: p.isRadiant ? 0 : 128, level: p.level,
+    kills: p.kills, deaths: p.deaths, assists: p.assists, last_hits: p.numLastHits, denies: p.numDenies,
+    gold_per_min: p.goldPerMinute, xp_per_min: p.experiencePerMinute, net_worth: p.networth,
+    hero_damage: p.heroDamage, tower_damage: p.towerDamage, hero_healing: p.heroHealing,
+    item_0: p.item0Id, item_1: p.item1Id, item_2: p.item2Id, item_3: p.item3Id, item_4: p.item4Id, item_5: p.item5Id, item_neutral: p.neutral0Id,
+  }));
+  const score = rad => players.filter(p => p.isRadiant === rad).reduce((s, p) => s + (p.kills || 0), 0);
+  return {
+    match_id: m.id, start_time: m.startDateTime, duration: m.durationSeconds, radiant_win: m.didRadiantWin,
+    game_mode: sMode(m.gameMode), lobby_type: sLobby(m.lobbyType), radiant_score: score(true), dire_score: score(false),
+    radiant_gold_adv: m.radiantNetworthLeads, radiant_xp_adv: m.radiantExperienceLeads, players,
+  };
+}
+
+// ---------- loading ----------
+async function loadStatic() {
+  const [heroes, items] = await Promise.all([api('/heroes'), api('/constants/items').catch(() => ({}))]);
+  HEROES = Object.fromEntries(heroes.map(h => [h.id, { name: h.localized_name, short: h.name.replace('npc_dota_hero_', '') }]));
+  ITEMS = {};
+  for (const [, it] of Object.entries(items)) if (it && it.id != null) ITEMS[it.id] = { img: it.img, dname: it.dname };
+}
+
+async function loadAccount(acc, force = false) {
+  acc.loading = true; acc.error = null; renderAccounts();
+  try {
+    acc.stratz = STRATZ_ACCOUNTS.has(acc.id);
+    const cached = await idb.get('acc:' + acc.id);
+    let raw = cached?.matches ?? null, profile = cached?.profile ?? null, ts = cached?.ts ?? 0, names = cached?.names ?? {};
+    // A cache built before the account had a STRATZ token needs a full STRATZ backfill.
+    const hasStratzData = !!raw?.some(m => m.src === 'stratz');
+    const fresh = cached && Date.now() - ts < CACHE_TTL && (hasStratzData || !acc.stratz);
+    if (!fresh || force) {
+      const latest = raw?.length ? Math.max(...raw.map(m => m.start_time)) : 0;
+      const params = { significant: 0, project: MATCH_FIELDS };
+      if (latest) params.date = Math.ceil((Date.now() / 1000 - latest) / DAY) + 1;
+      const [p, ms, sz] = await Promise.all([
+        api(`/players/${acc.id}`).catch(e => acc.stratz ? null : Promise.reject(e)),
+        api(`/players/${acc.id}/matches`, params).catch(e => acc.stratz ? [] : Promise.reject(e)),
+        acc.stratz ? stratzMatches(acc, hasStratzData ? latest : 0) : null,
+      ]);
+      profile = p;
+      if (!profile?.profile && sz?.profile) {
+        profile = { ...profile, profile: { personaname: sz.profile.name, avatar: sz.profile.avatar }, rank_tier: sz.profile.seasonRank };
+      }
+      // Merge by match id; STRATZ rows win over OpenDota rows for the same match.
+      const byId = new Map((raw ?? []).map(m => [m.match_id, m]));
+      for (const m of ms) if (byId.get(m.match_id)?.src !== 'stratz') byId.set(m.match_id, m);
+      for (const m of sz?.matches ?? []) byId.set(m.match_id, m);
+      raw = [...byId.values()].sort((a, b) => b.start_time - a.start_time);
+      names = { ...names, ...sz?.names };
+      ts = Date.now();
+      await idb.set('acc:' + acc.id, { profile, matches: raw, names, ts });
+    }
+    acc.profile = profile; acc.raw = raw; acc.ts = ts; acc.names = names;
+    acc.matches = raw.map(m => normalize(m, acc.id));
+    if (!profile?.profile) acc.error = '资料不可见(可能未公开比赛数据)';
+  } catch (e) {
+    acc.error = e.message;
+  } finally {
+    acc.loading = false;
+  }
+}
+
+async function loadAll(force = false) {
+  const status = $('#status');
+  status.textContent = '加载中…';
+  try {
+    if (!Object.keys(HEROES).length) await Promise.all([loadStatic(), detectStratz()]);
+    buildFilterOptions();
+    await Promise.all(S.accounts.map(a => loadAccount(a, force).then(() => { renderAccounts(); invalidate(); })));
+    const total = S.accounts.reduce((s, a) => s + (a.matches?.length || 0), 0);
+    status.textContent = `已加载 ${S.accounts.length} 个账号,共 ${total} 场`;
+  } catch (e) {
+    status.textContent = '出错:' + e.message;
+  }
+  buildFilterOptions();
+  invalidate();
+}
+
+function setAccountsFromText(text) {
+  const ids = [...new Set(text.split('\n').map(l => l.trim()).filter(Boolean).map(toAccountId).filter(Boolean))];
+  const old = new Map(S.accounts.map(a => [a.id, a]));
+  const known = new Set(S.accounts.map(a => a.id));
+  S.accounts = ids.map(id => old.get(id) ?? { id });
+  for (const id of ids) if (!known.has(id)) S.selected.add(id);
+  for (const id of [...S.selected]) if (!ids.includes(id)) S.selected.delete(id);
+  saveAccounts();
+}
+function saveAccounts() {
+  lsSet('d2.ids', S.accounts.map(a => a.id));
+  lsSet('d2.selected', [...S.selected]);
+  $('#ids').value = S.accounts.map(a => a.id).join('\n');
+}
+
+// ---------- filtering ----------
+function timeBounds() {
+  const f = S.f;
+  const now = Date.now() / 1000;
+  if (f.range === 'custom') {
+    const from = f.from ? new Date(f.from + 'T00:00:00').getTime() / 1000 : 0;
+    const to = f.to ? new Date(f.to + 'T23:59:59').getTime() / 1000 : now;
+    return [from, to];
+  }
+  const days = +f.range;
+  return [days ? now - days * DAY : 0, now + DAY];
+}
+
+let _cache = null;
+function invalidate() { _cache = null; S.page = 0; render(); }
+function filtered() {
+  if (_cache) return _cache;
+  const f = S.f;
+  const [from, to] = timeBounds();
+  const out = [];
+  for (const a of S.accounts) {
+    if (!S.selected.has(a.id) || !a.matches) continue;
+    for (const m of a.matches) {
+      if (m.start_time < from || m.start_time > to) continue;
+      if (f.heroes.size && !f.heroes.has(m.hero_id)) continue;
+      if (f.pos.size && !f.pos.has(m.pos)) continue;
+      if (f.modes.size && !f.modes.has(m.game_mode)) continue;
+      if (f.lobbies.size && !f.lobbies.has(m.lobby_type)) continue;
+      if (f.party === 'solo' && m.party_size !== 1) continue;
+      if (f.party === 'party' && !(m.party_size > 1)) continue;
+      if (f.result === 'w' && !m.win) continue;
+      if (f.result === 'l' && m.win) continue;
+      out.push(m);
+    }
+  }
+  out.sort((a, b) => b.start_time - a.start_time);
+  return _cache = out;
+}
+
+function summarize(ms) {
+  const n = ms.length;
+  const s = { games: n, win: 0, k: 0, d: 0, a: 0, gpm: 0, xpm: 0, dur: 0, lh: 0, dmg: 0, gpmN: 0 };
+  for (const m of ms) {
+    s.win += m.win; s.k += m.kills; s.d += m.deaths; s.a += m.assists; s.dur += m.duration;
+    if (m.gold_per_min != null) { s.gpm += m.gold_per_min; s.xpm += m.xp_per_min || 0; s.lh += m.last_hits || 0; s.dmg += m.hero_damage || 0; s.gpmN++; }
+  }
+  s.wr = n ? s.win / n : 0;
+  s.kda = kdaOf(s.k, s.d, s.a);
+  s.avgK = n ? s.k / n : 0; s.avgD = n ? s.d / n : 0; s.avgA = n ? s.a / n : 0;
+  s.avgGpm = s.gpmN ? s.gpm / s.gpmN : null; s.avgXpm = s.gpmN ? s.xpm / s.gpmN : null;
+  s.avgLh = s.gpmN ? s.lh / s.gpmN : null; s.avgDmg = s.gpmN ? s.dmg / s.gpmN : null;
+  s.avgDur = n ? s.dur / n : 0;
+  return s;
+}
+function groupBy(ms, fn) {
+  const g = new Map();
+  for (const m of ms) { const k = fn(m); if (!g.has(k)) g.set(k, []); g.get(k).push(m); }
+  return g;
+}
+
+// ---------- multi-select component ----------
+function multiSelect(el, { label, options, selected, onChange, img }) {
+  el.innerHTML = `<button type="button"></button><div class="pop"><input type="text" placeholder="搜索…"><div class="opts"></div>
+    <div class="acts"><button type="button" data-a="all">全选可见</button><button type="button" data-a="none">清空</button></div></div>`;
+  const btn = el.querySelector('button'), pop = el.querySelector('.pop'), search = pop.querySelector('input'), opts = pop.querySelector('.opts');
+  const paint = () => {
+    btn.textContent = selected.size ? `${label}:${selected.size === 1 ? options.find(o => selected.has(o.v))?.t ?? 1 : selected.size + ' 项'}` : `${label}:全部`;
+    const q = search.value.trim().toLowerCase();
+    opts.innerHTML = options.filter(o => !q || o.t.toLowerCase().includes(q)).map(o =>
+      `<label class="opt"><input type="checkbox" data-v="${o.v}" ${selected.has(o.v) ? 'checked' : ''}>${img ? img(o.v) : ''}<span>${esc(o.t)}</span>${o.c != null ? `<span class="cnt">${o.c}</span>` : ''}</label>`).join('') || '<div class="sub" style="padding:6px">无选项</div>';
+  };
+  btn.onclick = e => { e.stopPropagation(); document.querySelectorAll('.ms.open').forEach(x => x !== el && x.classList.remove('open')); el.classList.toggle('open'); if (el.classList.contains('open')) search.focus(); };
+  pop.onclick = e => e.stopPropagation();
+  search.oninput = paint;
+  opts.onchange = e => {
+    const v = +e.target.dataset.v;
+    e.target.checked ? selected.add(v) : selected.delete(v);
+    paint(); onChange();
+  };
+  pop.querySelector('.acts').onclick = e => {
+    const a = e.target.dataset.a; if (!a) return;
+    if (a === 'none') selected.clear();
+    else opts.querySelectorAll('input[type=checkbox]').forEach(c => selected.add(+c.dataset.v));
+    paint(); onChange();
+  };
+  paint();
+  return { paint };
+}
+document.addEventListener('click', () => document.querySelectorAll('.ms.open').forEach(x => x.classList.remove('open')));
+
+const msCtl = {};
+function buildFilterOptions() {
+  const all = S.accounts.flatMap(a => a.matches || []);
+  const cnt = fn => { const c = new Map(); for (const m of all) c.set(fn(m), (c.get(fn(m)) || 0) + 1); return c; };
+  const hc = cnt(m => m.hero_id), mc = cnt(m => m.game_mode), lc = cnt(m => m.lobby_type), pc = cnt(m => m.pos);
+  const heroOpts = Object.entries(HEROES).map(([id, h]) => ({ v: +id, t: h.name, c: hc.get(+id) || 0 }))
+    .sort((a, b) => b.c - a.c || a.t.localeCompare(b.t));
+  const modeOpts = [...mc.keys()].sort((a, b) => mc.get(b) - mc.get(a)).map(v => ({ v, t: MODE_ZH[v] ?? `模式 ${v}`, c: mc.get(v) }));
+  const lobbyOpts = [...lc.keys()].sort((a, b) => lc.get(b) - lc.get(a)).map(v => ({ v, t: LOBBY_ZH[v] ?? `类型 ${v}`, c: lc.get(v) }));
+  const posOpts = [1, 2, 3, 4, 5, 0].map(v => ({ v, t: POS_ZH[v], c: pc.get(v) || 0 }));
+  msCtl.hero = multiSelect($('#fHero'), { label: '英雄', options: heroOpts, selected: S.f.heroes, onChange: invalidate, img: v => heroImg(v, '') });
+  msCtl.pos = multiSelect($('#fPos'), { label: '位置', options: posOpts, selected: S.f.pos, onChange: invalidate });
+  msCtl.mode = multiSelect($('#fMode'), { label: '模式', options: modeOpts, selected: S.f.modes, onChange: invalidate });
+  msCtl.lobby = multiSelect($('#fLobby'), { label: '大厅', options: lobbyOpts, selected: S.f.lobbies, onChange: invalidate });
+}
+
+// ---------- accounts bar ----------
+function renderAccounts() {
+  const el = $('#accs');
+  if (!S.accounts.length) { el.innerHTML = '<span class="sub">尚未添加账号</span>'; return; }
+  el.innerHTML = S.accounts.map(a => {
+    const p = a.profile?.profile;
+    const on = S.selected.has(a.id);
+    const sub = a.loading ? '加载中…' : a.error ? `<span class="err">${esc(a.error)}</span>` :
+      `${rankName(a.profile?.rank_tier)} · ${a.matches?.length ?? 0} 场${a.stratz ? ' · <span class="tag w">Stratz</span>' : ''}`;
+    return `<div class="acc ${on ? '' : 'off'}" data-id="${a.id}" title="${esc(a.id)}">
+      <span class="dot" style="background:${accColor(a.id)}"></span>
+      ${p?.avatar ? `<img src="${esc(p.avatar)}" alt="">` : ''}
+      <div><div class="nm">${esc(p?.personaname || a.id)}</div><div class="sub">${sub}</div></div>
+      <span class="x" data-rm="${a.id}" title="移除">×</span></div>`;
+  }).join('');
+}
+$('#accs').onclick = e => {
+  const rm = e.target.dataset.rm;
+  if (rm) {
+    S.accounts = S.accounts.filter(a => a.id !== rm); S.selected.delete(rm);
+    saveAccounts(); renderAccounts(); buildFilterOptions(); invalidate(); return;
+  }
+  const card = e.target.closest('.acc'); if (!card) return;
+  const id = card.dataset.id;
+  S.selected.has(id) ? S.selected.delete(id) : S.selected.add(id);
+  saveAccounts(); renderAccounts(); invalidate();
+};
+$('#accAll').onclick = () => { S.accounts.forEach(a => S.selected.add(a.id)); saveAccounts(); renderAccounts(); invalidate(); };
+$('#accNone').onclick = () => { S.selected.clear(); saveAccounts(); renderAccounts(); invalidate(); };
+$('#refresh').onclick = () => { memo.clear(); loadAll(true); };
+$('#setBtn').onclick = () => { $('#setup').hidden = !$('#setup').hidden; };
+$('#go').onclick = () => {
+  lsSet('d2.apikey', $('#apikey').value.trim());
+  setAccountsFromText($('#ids').value);
+  renderAccounts();
+  $('#setup').hidden = true;
+  loadAll();
+};
+
+// ---------- filter bar wiring ----------
+$('#fRange').onchange = e => { S.f.range = e.target.value; $('#fCustom').hidden = S.f.range !== 'custom'; invalidate(); };
+$('#fFrom').onchange = e => { S.f.from = e.target.value; invalidate(); };
+$('#fTo').onchange = e => { S.f.to = e.target.value; invalidate(); };
+for (const [id, key] of [['#fParty', 'party'], ['#fResult', 'result']]) {
+  $(id).onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    S.f[key] = b.dataset.v;
+    $(id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    invalidate();
+  };
+}
+$('#fReset').onclick = () => {
+  Object.assign(S.f, { range: '365', from: '', to: '', party: '', result: '' });
+  S.f.heroes.clear(); S.f.pos.clear(); S.f.modes.clear(); S.f.lobbies.clear();
+  $('#fRange').value = '365'; $('#fCustom').hidden = true;
+  for (const id of ['#fParty', '#fResult']) $(id).querySelectorAll('button').forEach((x, i) => x.classList.toggle('on', i === 0));
+  Object.values(msCtl).forEach(c => c.paint());
+  invalidate();
+};
+function setHeroFilter(id) {
+  S.f.heroes.clear(); S.f.heroes.add(id); msCtl.hero?.paint(); S.tab = 'matches';
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === S.tab));
+  invalidate();
+}
+
+$('#tabs').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.tab = b.dataset.t;
+  document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+  render();
+};
+
+// theme
+const THEMES = ['auto', 'light', 'dark'], THEME_ZH = { auto: '自动', light: '浅色', dark: '深色' };
+function applyTheme(t) {
+  if (t === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.dataset.theme = t;
+  $('#themeBtn').textContent = '主题:' + THEME_ZH[t];
+}
+$('#themeBtn').onclick = () => { const t = THEMES[(THEMES.indexOf(lsGet('d2.theme', 'auto')) + 1) % 3]; lsSet('d2.theme', t); applyTheme(t); };
+
+// tooltip
+const tip = $('#tip');
+document.addEventListener('mousemove', e => {
+  const t = e.target.closest?.('[data-tip]');
+  if (!t) { tip.style.display = 'none'; return; }
+  tip.textContent = t.dataset.tip;
+  tip.style.display = 'block';
+  const r = tip.getBoundingClientRect();
+  let x = e.clientX + 14, y = e.clientY + 14;
+  if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14;
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+});
+
+// ---------- charts (inline SVG) ----------
+function niceTicks(min, max, n = 4) {
+  if (min === max) { max = min + 1; }
+  const step0 = (max - min) / n, mag = 10 ** Math.floor(Math.log10(step0));
+  const step = [1, 2, 2.5, 5, 10].map(x => x * mag).find(x => x >= step0);
+  const lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step;
+  const t = []; for (let v = lo; v <= hi + step / 2; v += step) t.push(+v.toFixed(10));
+  return t;
+}
+function legendHtml(series) {
+  return series.length < 2 ? '' : `<div class="legend">${series.map(s => `<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('')}</div>`;
+}
+function xLabelIdx(n, max = 7) {
+  const step = Math.max(1, Math.ceil(n / max));
+  const out = []; for (let i = 0; i < n; i += step) out.push(i); return out;
+}
+
+function lineChart(W, { labels, series, yFmt = v => v, yDomain, refLine, H = 240 }) {
+  const L = 44, R = series.length <= 4 && series.length > 1 ? 90 : 14, T = 10, B = 26;
+  const n = labels.length, iw = W - L - R, ih = H - T - B;
+  const vals = series.flatMap(s => s.values.filter(v => v != null));
+  let [mn, mx] = yDomain ?? [Math.min(...vals), Math.max(...vals)];
+  if (!vals.length) { mn = 0; mx = 1; }
+  const ticks = niceTicks(mn, mx); mn = ticks[0]; mx = ticks.at(-1);
+  const x = i => L + (n === 1 ? iw / 2 : i * iw / (n - 1));
+  const y = v => T + ih - (v - mn) / (mx - mn || 1) * ih;
+  let s = `<svg width="${W}" height="${H}" role="img">`;
+  for (const t of ticks) s += `<line x1="${L}" x2="${L + iw}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${esc(yFmt(t))}</text>`;
+  if (refLine != null && refLine > mn && refLine < mx) s += `<line x1="${L}" x2="${L + iw}" y1="${y(refLine)}" y2="${y(refLine)}" stroke="var(--muted)" stroke-dasharray="4 4"/>`;
+  for (const i of xLabelIdx(n)) s += `<text x="${x(i)}" y="${H - 6}" text-anchor="middle">${esc(labels[i])}</text>`;
+  for (const se of series) {
+    let d = '', pen = false;
+    se.values.forEach((v, i) => { if (v == null) { pen = false; return; } d += `${pen ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`; pen = true; });
+    s += `<path d="${d}" fill="none" stroke="${se.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    if (n <= 60) se.values.forEach((v, i) => { if (v != null) s += `<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="${se.color}" stroke="var(--surface)" stroke-width="2"/>`; });
+    if (R > 14) {
+      const li = se.values.findLastIndex(v => v != null);
+      if (li >= 0) s += `<text x="${x(li) + 8}" y="${y(se.values[li]) + 4}" style="fill:var(--text-2)">${esc(se.name.slice(0, 10))}</text>`;
+    }
+  }
+  const bw = n === 1 ? iw : iw / (n - 1);
+  for (let i = 0; i < n; i++) {
+    const tipTxt = labels[i] + '\n' + series.map(se => `${se.name}:${se.values[i] == null ? '-' : yFmt(se.values[i])}${se.extra ? se.extra[i] : ''}`).join('\n');
+    s += `<rect class="hit" x="${x(i) - bw / 2}" y="${T}" width="${bw}" height="${ih}" data-tip="${esc(tipTxt)}"/>`;
+  }
+  return legendHtml(series) + s + '</svg>';
+}
+
+function stackChart(W, { labels, series, H = 220 }) {
+  const L = 44, R = 10, T = 10, B = 26;
+  const n = labels.length, iw = W - L - R, ih = H - T - B;
+  const totals = labels.map((_, i) => series.reduce((s, se) => s + se.values[i], 0));
+  const ticks = niceTicks(0, Math.max(1, ...totals)); const mx = ticks.at(-1);
+  const band = iw / n, bw = Math.max(2, Math.min(28, band * 0.72));
+  const y = v => T + ih - v / mx * ih;
+  let s = `<svg width="${W}" height="${H}" role="img">`;
+  for (const t of ticks) s += `<line x1="${L}" x2="${L + iw}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${t}</text>`;
+  for (const i of xLabelIdx(n)) s += `<text x="${L + band * (i + .5)}" y="${H - 6}" text-anchor="middle">${esc(labels[i])}</text>`;
+  for (let i = 0; i < n; i++) {
+    let acc = 0;
+    const cx = L + band * i + (band - bw) / 2;
+    const parts = series.map(se => ({ se, v: se.values[i] })).filter(p => p.v > 0);
+    parts.forEach((p, j) => {
+      const y0 = y(acc), y1 = y(acc + p.v); acc += p.v;
+      const h = Math.max(0, y0 - y1 - (j < parts.length - 1 ? 2 : 0));
+      const top = y0 - h;
+      if (j === parts.length - 1) {
+        const r = Math.min(4, h / 2, bw / 2);
+        s += `<path d="M${cx},${y0}V${top + r}Q${cx},${top} ${cx + r},${top}H${cx + bw - r}Q${cx + bw},${top} ${cx + bw},${top + r}V${y0}Z" fill="${p.se.color}"/>`;
+      } else s += `<rect x="${cx}" y="${top}" width="${bw}" height="${h}" fill="${p.se.color}"/>`;
+    });
+    const tipTxt = `${labels[i]} · 共 ${totals[i]} 场\n` + series.filter(se => se.values[i]).map(se => `${se.name}:${se.values[i]}${se.extra ? se.extra[i] : ''}`).join('\n');
+    s += `<rect class="hit" x="${L + band * i}" y="${T}" width="${band}" height="${ih}" data-tip="${esc(tipTxt)}"/>`;
+  }
+  return legendHtml(series) + s + '</svg>';
+}
+
+const seqLevel = (v, max) => v <= 0 ? 0 : Math.min(4, 1 + Math.floor((v / max) * 3.999));
+function heatLegend() {
+  return `<div class="legend" style="justify-content:flex-end">少 ${[0, 1, 2, 3, 4].map(i => `<i style="background:var(--seq${i})"></i>`).join('')} 多</div>`;
+}
+
+// ---------- views ----------
+function render() {
+  const v = $('#view');
+  if (!S.accounts.length) { v.innerHTML = '<div class="empty">在「账号 / 设置」中添加账号开始使用</div>'; return; }
+  if (!S.selected.size) { v.innerHTML = '<div class="empty">请至少选中一个账号</div>'; return; }
+  const ms = filtered();
+  const views = { overview, heroes, peers, activity, trends, matches };
+  v.innerHTML = views[S.tab](ms) ?? '';
+  afterRender[S.tab]?.(ms);
+}
+const afterRender = {};
+
+function overview(ms) {
+  if (!ms.length) return '<div class="empty">当前筛选下没有比赛</div>';
+  const s = summarize(ms);
+  const heroesN = new Set(ms.map(m => m.hero_id)).size;
+  const kpis = [
+    ['场次', s.games], ['胜率', pct(s.win, s.games)], ['胜 / 负', `${s.win} / ${s.games - s.win}`],
+    ['KDA', fix(s.kda, 2)], ['场均 K/D/A', `${fix(s.avgK)}/${fix(s.avgD)}/${fix(s.avgA)}`],
+    ['GPM', fix(s.avgGpm, 0)], ['XPM', fix(s.avgXpm, 0)], ['平均时长', fmtDur(Math.round(s.avgDur))], ['英雄数', heroesN],
+  ];
+  const byAcc = groupBy(ms, m => m.acc);
+  const accRows = S.accounts.filter(a => byAcc.has(a.id)).map(a => {
+    const am = byAcc.get(a.id), as = summarize(am);
+    const topHero = [...groupBy(am, m => m.hero_id)].sort((x, y) => y[1].length - x[1].length)[0];
+    return `<tr><td><span class="dots"><span><i style="background:${accColor(a.id)}"></i></span></span> ${esc(accName(a.id))}</td>
+      <td>${esc(rankName(a.profile?.rank_tier))}</td><td class="n">${as.games}</td><td class="n">${pct(as.win, as.games)}</td>
+      <td class="n">${fix(as.kda, 2)}</td><td class="n">${fix(as.avgGpm, 0)}</td>
+      <td><span class="hero">${heroImg(topHero[0], 'hs')}${esc(heroName(topHero[0]))} (${topHero[1].length})</span></td>
+      <td class="sub">${ago(am[0].start_time)}</td></tr>`;
+  }).join('');
+
+  const posG = groupBy(ms, m => m.pos);
+  const posMax = Math.max(...[...posG.values()].map(x => x.length));
+  const posHtml = [1, 2, 3, 4, 5, 0].filter(p => posG.has(p)).map(p => {
+    const pm = posG.get(p), ps = summarize(pm);
+    return `<div class="posbar" data-tip="${esc(`${POS_ZH[p]}\n${ps.games} 场 · 胜率 ${pct(ps.win, ps.games)} · KDA ${fix(ps.kda, 2)}`)}">
+      <span>${p ? p + ' 号位' : '未知'}</span><div class="t"><i style="width:${pm.length / posMax * 100}%"></i></div>
+      <span class="sub">${pm.length} 场 · ${pct(ps.win, ps.games)}</span></div>`;
+  }).join('');
+
+  const topHeroes = [...groupBy(ms, m => m.hero_id)].sort((a, b) => b[1].length - a[1].length).slice(0, 12).map(([id, hm]) => {
+    const hs = summarize(hm);
+    return `<div class="hc" data-hero="${id}">${heroImg(id, '')}<div><strong>${esc(heroName(id))}</strong></div>
+      <div class="sub">${hs.games} 场 · ${pct(hs.win, hs.games)} · KDA ${fix(hs.kda, 1)}</div></div>`;
+  }).join('');
+
+  const recent = ms.slice(0, 40).reverse().map(m => `<span class="${m.win ? 'w' : 'l'}" data-tip="${esc(`${fmtTime(m.start_time)}\n${accName(m.acc)} · ${heroName(m.hero_id)}\n${m.win ? '胜' : '负'} ${m.kills}/${m.deaths}/${m.assists}`)}">${m.win ? '胜' : '负'}</span>`).join('');
+
+  const solo = ms.filter(m => m.party_size === 1), party = ms.filter(m => m.party_size > 1);
+  const sp = (lbl, arr) => { const x = summarize(arr); return `<tr><td>${lbl}</td><td class="n">${x.games}</td><td class="n">${pct(x.win, x.games)}</td><td class="n">${fix(x.kda, 2)}</td></tr>`; };
+
+  return `<div class="kpis">${kpis.map(([l, v]) => `<div class="kpi"><div class="v">${esc(v)}</div><div class="l">${l}</div></div>`).join('')}</div>
+  <div class="card" style="margin-top:12px"><h3>各账号</h3><div class="tw"><table>
+    <tr><th>账号</th><th>段位</th><th class="n">场次</th><th class="n">胜率</th><th class="n">KDA</th><th class="n">GPM</th><th>最常用</th><th>最近</th></tr>${accRows}</table></div></div>
+  <div class="grid2">
+    <div class="card"><h3>位置分布 <span class="sub">(Stratz 账号为精确位置,其余按分路与补刀估算)</span></h3>${posHtml || '<div class="sub">无数据</div>'}</div>
+    <div class="card"><h3>单排 / 组队</h3><div class="tw"><table><tr><th></th><th class="n">场次</th><th class="n">胜率</th><th class="n">KDA</th></tr>
+      ${sp('单排', solo)}${sp('组队', party)}${sp('未知', ms.filter(m => m.party_size == null))}</table></div>
+      <h3 style="margin-top:14px">最近 ${Math.min(40, ms.length)} 场</h3><div class="strip">${recent}</div></div>
+  </div>
+  <div class="card"><h3>常用英雄</h3><div class="herogrid">${topHeroes}</div></div>`;
+}
+afterRender.overview = () => {
+  document.querySelectorAll('[data-hero]').forEach(el => el.onclick = () => setHeroFilter(+el.dataset.hero));
+};
+
+function sortRows(rows, sort) {
+  const { k, d } = sort;
+  return rows.sort((a, b) => {
+    const x = a[k], y = b[k];
+    if (typeof x === 'string') return x.localeCompare(y) * d;
+    return ((x ?? -Infinity) - (y ?? -Infinity)) * d;
+  });
+}
+function th(label, key, sort, cls = 'n') {
+  return `<th class="s ${cls} ${sort.k === key ? 'on' : ''}" data-k="${key}" data-dir="${sort.d < 0 ? ' ↓' : ' ↑'}">${label}</th>`;
+}
+function wireSort(sort) {
+  document.querySelectorAll('#view th.s').forEach(el => el.onclick = () => {
+    const k = el.dataset.k;
+    if (sort.k === k) sort.d = -sort.d; else { sort.k = k; sort.d = -1; }
+    render();
+  });
+}
+
+function heroes(ms) {
+  if (!ms.length) return '<div class="empty">当前筛选下没有比赛</div>';
+  const rows = [...groupBy(ms, m => m.hero_id)].map(([id, hm]) => {
+    const s = summarize(hm);
+    const accs = [...groupBy(hm, m => m.acc)];
+    return { id, name: heroName(id), games: s.games, wr: s.wr, win: s.win, kda: s.kda, k: s.avgK, d: s.avgD, a: s.avgA,
+      gpm: s.avgGpm, xpm: s.avgXpm, dmg: s.avgDmg, last: hm[0].start_time, accs };
+  });
+  sortRows(rows, S.heroSort);
+  const maxG = Math.max(...rows.map(r => r.games));
+  const hs = S.heroSort;
+  return `<div class="card"><h3>英雄 <span class="sub">${rows.length} 个英雄 · 点击行查看该英雄比赛</span></h3><div class="tw"><table>
+    <tr>${th('英雄', 'name', hs, '')}${th('场次', 'games', hs)}${th('胜率', 'wr', hs)}${th('KDA', 'kda', hs)}
+    <th class="n">K / D / A</th>${th('GPM', 'gpm', hs)}${th('XPM', 'xpm', hs)}${th('英雄伤害', 'dmg', hs)}${th('最近', 'last', hs)}<th>账号分布</th></tr>
+    ${rows.map(r => `<tr class="click" data-hero="${r.id}">
+      <td><span class="hero">${heroImg(r.id)}${esc(r.name)}</span></td>
+      <td class="n">${r.games}<span class="bar"><i style="width:${r.games / maxG * 100}%"></i></span></td>
+      <td class="n" style="color:${r.games >= 5 ? (r.wr >= .5 ? 'var(--good)' : 'var(--bad)') : 'inherit'}">${pct(r.win, r.games)}</td>
+      <td class="n">${fix(r.kda, 2)}</td><td class="n">${fix(r.k)} / ${fix(r.d)} / ${fix(r.a)}</td>
+      <td class="n">${fix(r.gpm, 0)}</td><td class="n">${fix(r.xpm, 0)}</td><td class="n">${r.dmg == null ? '-' : Math.round(r.dmg).toLocaleString()}</td>
+      <td class="sub">${ago(r.last)}</td>
+      <td><span class="dots">${r.accs.map(([a, am]) => `<span data-tip="${esc(`${accName(a)}:${am.length} 场 · ${pct(am.filter(m => m.win).length, am.length)}`)}"><i style="background:${accColor(a)}"></i>${am.length}</span>`).join('')}</span></td>
+    </tr>`).join('')}</table></div></div>`;
+}
+afterRender.heroes = () => {
+  wireSort(S.heroSort);
+  document.querySelectorAll('[data-hero]').forEach(el => el.onclick = () => setHeroFilter(+el.dataset.hero));
+};
+
+// ---- teammates ----
+function peerParams() {
+  const f = S.f, p = { significant: 0 }, skipped = [];
+  const [from, to] = timeBounds();
+  if (from > 0) p.date = Math.ceil((Date.now() / 1000 - from) / DAY);
+  if (f.range === 'custom' && f.to) skipped.push('结束日期');
+  const single = (set, key, name) => { if (set.size === 1) p[key] = [...set][0]; else if (set.size > 1) skipped.push(name + '(多选)'); };
+  single(f.heroes, 'hero_id', '英雄'); single(f.modes, 'game_mode', '模式'); single(f.lobbies, 'lobby_type', '大厅');
+  if (f.pos.size) skipped.push('位置');
+  if (f.party) skipped.push('组队');
+  if (f.result) p.win = f.result === 'w' ? 1 : 0;
+  return { p, skipped };
+}
+let peerState = { key: null, data: null, error: null };
+function localPeers(ms) {
+  const out = new Map();
+  for (const m of ms) {
+    if (!m.mates) continue;
+    const names = S.accounts.find(a => a.id === m.acc)?.names ?? {};
+    for (const [pid, same] of m.mates) {
+      const k = m.acc + ':' + pid;
+      const r = out.get(k) ?? { account_id: pid, personaname: names[pid], src: m.acc, with_games: 0, with_win: 0, against_games: 0, against_win: 0, with_gpm_sum: 0, last_played: 0 };
+      if (same) { r.with_games++; r.with_win += m.win; } else { r.against_games++; r.against_win += m.win; }
+      r.last_played = Math.max(r.last_played, m.start_time);
+      out.set(k, r);
+    }
+  }
+  return [...out.values()];
+}
+function peers(ms) {
+  const { p, skipped } = peerParams();
+  // STRATZ accounts: teammates computed locally from each match's player list (exact, all filters apply).
+  // Other accounts: OpenDota's server-side peers endpoint.
+  const sel = S.accounts.filter(a => S.selected.has(a.id) && !a.stratz);
+  const key = JSON.stringify([p, sel.map(a => a.id)]);
+  if (peerState.key !== key) {
+    peerState = { key, data: null, error: null };
+    Promise.all(sel.map(a => api(`/players/${a.id}/peers`, p).then(list => list.map(x => ({ ...x, src: a.id })))))
+      .then(lists => { if (peerState.key === key) { peerState.data = lists.flat(); if (S.tab === 'peers') render(); } })
+      .catch(e => { if (peerState.key === key) { peerState.error = e.message; if (S.tab === 'peers') render(); } });
+  }
+
+  // Exact: own accounts appearing together in the same match (respects every filter)
+  const byMatch = groupBy(ms, m => m.match_id);
+  const pairs = new Map();
+  for (const [, arr] of byMatch) {
+    if (arr.length < 2) continue;
+    for (let i = 0; i < arr.length; i++) for (let j = i + 1; j < arr.length; j++) {
+      const [a, b] = [arr[i], arr[j]].sort((x, y) => x.acc.localeCompare(y.acc));
+      const k = a.acc + '|' + b.acc;
+      const same = a.radiant === b.radiant;
+      const r = pairs.get(k) ?? { a: a.acc, b: b.acc, with: 0, withWin: 0, vs: 0, aWin: 0 };
+      if (same) { r.with++; r.withWin += a.win; } else { r.vs++; r.aWin += a.win; }
+      pairs.set(k, r);
+    }
+  }
+  const ownHtml = pairs.size ? `<div class="card"><h3>自有账号同场 <span class="sub">(精确统计,应用全部筛选)</span></h3><div class="tw"><table>
+    <tr><th>账号 A</th><th>账号 B</th><th class="n">同队</th><th class="n">同队胜率</th><th class="n">对阵</th><th class="n">A 胜率(对阵)</th></tr>
+    ${[...pairs.values()].sort((x, y) => (y.with + y.vs) - (x.with + x.vs)).map(r => `<tr>
+      <td><span class="dots"><span><i style="background:${accColor(r.a)}"></i></span></span> ${esc(accName(r.a))}</td>
+      <td><span class="dots"><span><i style="background:${accColor(r.b)}"></i></span></span> ${esc(accName(r.b))}</td>
+      <td class="n">${r.with}</td><td class="n">${pct(r.withWin, r.with)}</td><td class="n">${r.vs}</td><td class="n">${pct(r.aWin, r.vs)}</td></tr>`).join('')}
+    </table></div></div>` : '';
+
+  let body;
+  if (peerState.error) body = `<div class="err">加载失败:${esc(peerState.error)}</div>`;
+  else if (!peerState.data) body = '<div class="empty">正在从 OpenDota 加载队友数据…</div>';
+  else {
+    const own = new Set(S.accounts.map(a => a.id));
+    const merged = new Map();
+    for (const x of [...peerState.data, ...localPeers(ms)]) {
+      const id = String(x.account_id);
+      const r = merged.get(id) ?? { id, name: x.personaname || id, avatar: x.avatar, own: own.has(id), with_games: 0, with_win: 0, against_games: 0, against_win: 0, gpm: 0, last: 0, srcs: [] };
+      r.with_games += x.with_games; r.with_win += x.with_win; r.against_games += x.against_games; r.against_win += x.against_win;
+      r.gpm += x.with_gpm_sum || 0; r.last = Math.max(r.last, x.last_played || 0);
+      r.srcs.push([x.src, x.with_games]);
+      merged.set(id, r);
+    }
+    let rows = [...merged.values()].filter(r => r.with_games + r.against_games >= S.peerMin);
+    rows.forEach(r => { r.with_wr = r.with_games ? r.with_win / r.with_games : null; r.against_wr = r.against_games ? r.against_win / r.against_games : null; r.avg_gpm = r.with_games ? r.gpm / r.with_games : null; });
+    sortRows(rows, S.peerSort);
+    rows = rows.slice(0, 300);
+    const ps = S.peerSort;
+    body = rows.length ? `<div class="tw"><table>
+      <tr>${th('玩家', 'name', ps, '')}${th('同队场次', 'with_games', ps)}${th('同队胜率', 'with_wr', ps)}${th('对阵场次', 'against_games', ps)}${th('对阵胜率', 'against_wr', ps)}${th('同队 GPM', 'avg_gpm', ps)}${th('最近同场', 'last', ps)}<th>与我的账号</th><th></th></tr>
+      ${rows.map(r => `<tr class="${r.own ? 'own' : ''}">
+        <td><span class="hero">${r.avatar ? `<img src="${esc(r.avatar)}" style="width:22px;height:22px;border-radius:50%" alt="">` : ''}${esc(r.name)}${r.own ? ' <span class="tag w">自有</span>' : ''}</span></td>
+        <td class="n">${r.with_games}</td><td class="n">${pct(r.with_win, r.with_games)}</td>
+        <td class="n">${r.against_games}</td><td class="n">${pct(r.against_win, r.against_games)}</td>
+        <td class="n">${fix(r.avg_gpm, 0)}</td><td class="sub">${r.last ? ago(r.last) : '-'}</td>
+        <td><span class="dots">${r.srcs.filter(s => s[1]).map(([a, g]) => `<span data-tip="${esc(accName(a))}"><i style="background:${accColor(a)}"></i>${g}</span>`).join('')}</span></td>
+        <td><a href="https://www.opendota.com/players/${esc(r.id)}" target="_blank" rel="noopener">OpenDota</a> · <a href="https://stratz.com/players/${esc(r.id)}" target="_blank" rel="noopener">Stratz</a></td>
+      </tr>`).join('')}</table></div>` : '<div class="empty">没有符合条件的队友</div>';
+  }
+  return `${ownHtml}<div class="card"><h3>队友 / 对手(所有选中账号合并)</h3>
+    ${skipped.length && sel.length ? `<div class="note">非 Stratz 账号的队友数据由 OpenDota 服务端统计,以下筛选无法应用:${skipped.join('、')}</div>` : ''}
+    <div class="row" style="margin-bottom:8px"><label class="f sub">最少同场次数 <input type="number" id="peerMin" min="1" value="${S.peerMin}" style="width:70px"></label></div>
+    ${body}</div>`;
+}
+afterRender.peers = () => {
+  wireSort(S.peerSort);
+  const pm = $('#peerMin');
+  if (pm) pm.onchange = () => { S.peerMin = Math.max(1, +pm.value || 1); render(); };
+};
+
+// ---- activity ----
+function chartWidth() { return Math.max(300, ($('#view').clientWidth || 800) - 30); }
+function dayKey(t) { const d = new Date(t * 1000); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
+
+function activity(ms) {
+  if (!ms.length) return '<div class="empty">当前筛选下没有比赛</div>';
+  // calendar (53 weeks ending at the newest filtered match or the filter end)
+  const [, to] = timeBounds();
+  const end = new Date(Math.min(to, Date.now() / 1000) * 1000); end.setHours(0, 0, 0, 0);
+  const start = new Date(end); start.setDate(start.getDate() - 7 * 52 - ((end.getDay() + 6) % 7));
+  const byDay = groupBy(ms, m => dayKey(m.start_time));
+  const cell = 12, gap = 3, L = 22, T = 18;
+  const weeks = Math.ceil(((end - start) / 864e5 + 1) / 7);
+  const maxDay = Math.max(1, ...[...byDay.values()].map(x => x.length));
+  let cal = `<svg width="${L + weeks * (cell + gap)}" height="${T + 7 * (cell + gap)}">`;
+  [0, 2, 4, 6].forEach(i => cal += `<text x="0" y="${T + i * (cell + gap) + 10}">${WEEKDAYS[i]}</text>`);
+  let lastMonth = -1, activeDays = 0;
+  for (let d = new Date(start), i = 0; d <= end; d.setDate(d.getDate() + 1), i++) {
+    const w = Math.floor(i / 7), wd = i % 7;
+    if (wd === 0 && d.getMonth() !== lastMonth && d.getDate() <= 7) { lastMonth = d.getMonth(); cal += `<text x="${L + w * (cell + gap)}" y="11">${d.getMonth() + 1}月</text>`; }
+    const k = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+    const dm = byDay.get(k) || [];
+    if (dm.length) activeDays++;
+    const wins = dm.filter(m => m.win).length;
+    const tipTxt = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} 周${WEEKDAYS[wd]}\n${dm.length ? `${dm.length} 场 · ${wins} 胜 ${dm.length - wins} 负` : '无比赛'}`;
+    cal += `<rect class="cell" x="${L + w * (cell + gap)}" y="${T + wd * (cell + gap)}" width="${cell}" height="${cell}" rx="2" fill="var(--seq${seqLevel(dm.length, maxDay)})" data-tip="${esc(tipTxt)}"/>`;
+  }
+  cal += '</svg>';
+
+  // weekday × hour
+  const grid = Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => ({ g: 0, w: 0 })));
+  for (const m of ms) { const d = new Date(m.start_time * 1000); const c = grid[(d.getDay() + 6) % 7][d.getHours()]; c.g++; c.w += m.win; }
+  const maxC = Math.max(1, ...grid.flat().map(c => c.g));
+  const W = chartWidth(), hc = Math.max(10, Math.floor((W - 30) / 24) - 2);
+  let hm = `<svg width="${30 + 24 * (hc + 2)}" height="${20 + 7 * 20}">`;
+  for (let h = 0; h < 24; h += 3) hm += `<text x="${30 + h * (hc + 2)}" y="12">${h}时</text>`;
+  grid.forEach((row, wd) => {
+    hm += `<text x="0" y="${20 + wd * 20 + 13}">周${WEEKDAYS[wd]}</text>`;
+    row.forEach((c, h) => hm += `<rect class="cell" x="${30 + h * (hc + 2)}" y="${20 + wd * 20}" width="${hc}" height="18" rx="2" fill="var(--seq${seqLevel(c.g, maxC)})" data-tip="${esc(`周${WEEKDAYS[wd]} ${h}:00–${h + 1}:00\n${c.g} 场 · 胜率 ${pct(c.w, c.g)}`)}"/>`);
+  });
+  hm += '</svg>';
+
+  // weekday and hour win rate tables
+  const wdRows = WEEKDAYS.map((n, i) => { const g = grid[i].reduce((s, c) => s + c.g, 0), w = grid[i].reduce((s, c) => s + c.w, 0); return `<tr><td>周${n}</td><td class="n">${g}</td><td class="n">${pct(w, g)}</td></tr>`; }).join('');
+  const span = (ms[0].start_time - ms.at(-1).start_time) / DAY + 1;
+  return `<div class="kpis">
+      <div class="kpi"><div class="v">${activeDays}</div><div class="l">近一年活跃天数</div></div>
+      <div class="kpi"><div class="v">${fix(ms.length / Math.max(1, new Set(ms.map(m => dayKey(m.start_time))).size), 1)}</div><div class="l">活跃日场均场次</div></div>
+      <div class="kpi"><div class="v">${fix(ms.length / Math.max(1, span / 7), 1)}</div><div class="l">每周场次</div></div>
+      <div class="kpi"><div class="v">${fmtDur(Math.round(ms.reduce((s, m) => s + m.duration, 0) / 60))}</div><div class="l">总游戏时长(时:分)</div></div>
+    </div>
+    <div class="card" style="margin-top:12px"><h3>每日活跃(近一年)</h3><div class="tw chart">${cal}</div>${heatLegend()}</div>
+    <div class="card"><h3>星期 × 时段</h3><div class="tw chart">${hm}</div>${heatLegend()}</div>
+    <div class="grid2">
+      <div class="card"><h3>按星期</h3><div class="tw"><table><tr><th></th><th class="n">场次</th><th class="n">胜率</th></tr>${wdRows}</table></div></div>
+      <div class="card"><h3>每日场次分布</h3><div class="chart" id="dayChart"></div></div>
+    </div>`;
+}
+afterRender.activity = ms => {
+  const el = $('#dayChart'); if (!el || !ms.length) return;
+  // how win rate changes with the n-th game of the day
+  const byDay = groupBy([...ms].reverse(), m => m.acc + ':' + dayKey(m.start_time));
+  const nth = Array.from({ length: 8 }, () => ({ g: 0, w: 0 }));
+  for (const [, arr] of byDay) arr.forEach((m, i) => { const c = nth[Math.min(7, i)]; c.g++; c.w += m.win; });
+  const labels = nth.map((_, i) => i === 7 ? '第 8+ 场' : `第 ${i + 1} 场`);
+  el.innerHTML = `<div class="sub" style="margin-bottom:4px">当天第 N 场的胜率(同一账号)</div>` + lineChart(el.clientWidth || 360, {
+    labels, H: 200, yDomain: [0.3, 0.7], refLine: 0.5, yFmt: v => Math.round(v * 100) + '%',
+    series: [{ name: '胜率', color: 'var(--c1)', values: nth.map(c => c.g ? c.w / c.g : null), extra: nth.map(c => `(${c.g} 场)`) }],
+  });
+};
+
+// ---- trends ----
+function bucketFn(gran) {
+  if (gran === 'day') return t => { const d = new Date(t * 1000); d.setHours(0, 0, 0, 0); return d.getTime(); };
+  if (gran === 'month') return t => { const d = new Date(t * 1000); return new Date(d.getFullYear(), d.getMonth(), 1).getTime(); };
+  return t => { const d = new Date(t * 1000); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return d.getTime(); };
+}
+function stepBucket(ts, gran) {
+  const d = new Date(ts);
+  if (gran === 'day') d.setDate(d.getDate() + 1); else if (gran === 'month') d.setMonth(d.getMonth() + 1); else d.setDate(d.getDate() + 7);
+  return d.getTime();
+}
+const MIN_BUCKET = 3; // buckets with fewer games are left as gaps to avoid 0%/100% spikes
+const METRICS = {
+  wr: { t: '胜率', f: s => s.games ? s.wr : null, fmt: v => Math.round(v * 100) + '%', ref: 0.5 },
+  kda: { t: 'KDA', f: s => s.games ? s.kda : null, fmt: v => fix(v, 1) },
+  gpm: { t: 'GPM', f: s => s.avgGpm, fmt: v => Math.round(v) },
+  xpm: { t: 'XPM', f: s => s.avgXpm, fmt: v => Math.round(v) },
+  dur: { t: '平均时长(分)', f: s => s.games ? s.avgDur / 60 : null, fmt: v => fix(v, 0) },
+  k: { t: '场均击杀', f: s => s.games ? s.avgK : null, fmt: v => fix(v, 1) },
+  d: { t: '场均死亡', f: s => s.games ? s.avgD : null, fmt: v => fix(v, 1) },
+};
+function trends(ms) {
+  if (!ms.length) return '<div class="empty">当前筛选下没有比赛</div>';
+  const t = S.trend;
+  return `<div class="card"><div class="row">
+      <label class="f sub">指标 <select id="tMetric">${Object.entries(METRICS).map(([k, m]) => `<option value="${k}" ${k === t.metric ? 'selected' : ''}>${m.t}</option>`).join('')}</select></label>
+      <label class="f sub">粒度 <select id="tGran">${[['auto', '自动'], ['day', '日'], ['week', '周'], ['month', '月']].map(([k, n]) => `<option value="${k}" ${k === t.gran ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+      <label class="f sub"><input type="checkbox" id="tSplit" ${t.split ? 'checked' : ''}> 按账号拆分</label>
+    </div></div>
+    <div class="card"><h3 id="tTitle"></h3><div class="chart" id="tLine"></div></div>
+    <div class="card"><h3>场次</h3><div class="chart" id="tBar"></div></div>
+    <div class="card"><h3>滚动胜率(最近 20 场)</h3><div class="chart" id="tRoll"></div></div>
+    <div class="card"><details><summary>数据表</summary><div class="tw" id="tTable"></div></details></div>`;
+}
+afterRender.trends = ms => {
+  if (!ms.length) return;
+  const t = S.trend;
+  $('#tMetric').onchange = e => { t.metric = e.target.value; render(); };
+  $('#tGran').onchange = e => { t.gran = e.target.value; render(); };
+  $('#tSplit').onchange = e => { t.split = e.target.checked; render(); };
+  const spanDays = (ms[0].start_time - ms.at(-1).start_time) / DAY;
+  const gran = t.gran !== 'auto' ? t.gran : spanDays <= 45 ? 'day' : spanDays <= 730 ? 'week' : 'month';
+  const bf = bucketFn(gran);
+  const keys = [];
+  for (let k = bf(ms.at(-1).start_time), last = bf(ms[0].start_time); k <= last; k = stepBucket(k, gran)) keys.push(k);
+  const labelOf = k => { const d = new Date(k); return gran === 'month' ? `${d.getFullYear() % 100}/${d.getMonth() + 1}` : `${d.getMonth() + 1}/${d.getDate()}`; };
+  const labels = keys.map(labelOf);
+  const idx = new Map(keys.map((k, i) => [k, i]));
+  const bucketize = arr => { const b = keys.map(() => []); for (const m of arr) b[idx.get(bf(m.start_time))]?.push(m); return b; };
+  const M = METRICS[t.metric];
+  const accs = S.accounts.filter(a => S.selected.has(a.id));
+  const byAcc = groupBy(ms, m => m.acc);
+  const all = bucketize(ms);
+  const W = chartWidth();
+
+  let series;
+  if (t.split && accs.length > 1) {
+    series = accs.filter(a => byAcc.has(a.id)).map(a => {
+      const b = bucketize(byAcc.get(a.id));
+      return { name: accName(a.id), color: accColor(a.id), values: b.map(x => x.length >= MIN_BUCKET ? M.f(summarize(x)) : null), extra: b.map(x => ` (${x.length} 场)`) };
+    });
+  } else series = [{ name: '全部选中账号', color: 'var(--c1)', values: all.map(x => x.length >= MIN_BUCKET ? M.f(summarize(x)) : null), extra: all.map(x => ` (${x.length} 场)`) }];
+  $('#tTitle').innerHTML = `${M.t} · 按${{ day: '日', week: '周', month: '月' }[gran]} <span class="sub">(少于 ${MIN_BUCKET} 场的时段不显示)</span>`;
+  $('#tLine').innerHTML = lineChart(W, { labels, series, yFmt: M.fmt, refLine: M.ref, yDomain: t.metric === 'wr' ? [0, 1] : undefined });
+
+  const barSeries = accs.filter(a => byAcc.has(a.id)).map(a => {
+    const b = bucketize(byAcc.get(a.id));
+    return { name: accName(a.id), color: accColor(a.id), values: b.map(x => x.length), extra: b.map(x => x.length ? ` · 胜率 ${pct(x.filter(m => m.win).length, x.length)}` : '') };
+  });
+  $('#tBar').innerHTML = stackChart(W, { labels, series: barSeries });
+
+  // rolling 20-game win rate, chronological, aggregated across accounts
+  const chrono = [...ms].reverse();
+  const roll = [], rl = [];
+  let wins = 0;
+  chrono.forEach((m, i) => {
+    wins += m.win; if (i >= 20) wins -= chrono[i - 20].win;
+    if (i >= 19) { roll.push(wins / 20); rl.push(fmtDate(m.start_time)); }
+  });
+  const step = Math.max(1, Math.ceil(roll.length / 300));
+  $('#tRoll').innerHTML = roll.length ? lineChart(W, {
+    labels: rl.filter((_, i) => i % step === 0), yDomain: [0, 1], refLine: 0.5, yFmt: v => Math.round(v * 100) + '%',
+    series: [{ name: '滚动胜率', color: 'var(--c1)', values: roll.filter((_, i) => i % step === 0) }],
+  }) : '<div class="sub">少于 20 场</div>';
+
+  $('#tTable').innerHTML = `<table><tr><th>时间</th><th class="n">场次</th><th class="n">胜率</th><th class="n">KDA</th><th class="n">GPM</th><th class="n">XPM</th></tr>
+    ${keys.map((k, i) => { const s = summarize(all[i]); return s.games ? `<tr><td>${labelOf(k)}</td><td class="n">${s.games}</td><td class="n">${pct(s.win, s.games)}</td><td class="n">${fix(s.kda, 2)}</td><td class="n">${fix(s.avgGpm, 0)}</td><td class="n">${fix(s.avgXpm, 0)}</td></tr>` : ''; }).reverse().join('')}</table>`;
+};
+
+// ---- matches ----
+const PAGE = 50;
+function matches(ms) {
+  if (!ms.length) return '<div class="empty">当前筛选下没有比赛</div>';
+  const rows = sortRows([...ms], S.matchSort);
+  const pages = Math.ceil(rows.length / PAGE);
+  S.page = Math.min(S.page, pages - 1);
+  const pageRows = rows.slice(S.page * PAGE, (S.page + 1) * PAGE);
+  const ms_ = S.matchSort;
+  return `<div class="card"><h3>比赛 <span class="sub">${rows.length} 场 · 点击行展开详情</span></h3><div class="tw"><table>
+    <tr>${th('时间', 'start_time', ms_, '')}<th>账号</th><th>英雄</th><th>结果</th>${th('K/D/A', 'kda', ms_)}${th('时长', 'duration', ms_)}
+    <th>模式</th><th>大厅</th><th>位置</th><th>组队</th>${th('GPM', 'gold_per_min', ms_)}${th('XPM', 'xp_per_min', ms_)}${th('伤害', 'hero_damage', ms_)}</tr>
+    ${pageRows.map(m => {
+      const k = m.match_id + ':' + m.acc;
+      return `<tr class="click" data-m="${k}">
+      <td>${fmtTime(m.start_time)}</td>
+      <td><span class="dots"><span><i style="background:${accColor(m.acc)}"></i></span></span> ${esc(accName(m.acc))}</td>
+      <td><span class="hero">${heroImg(m.hero_id, 'hs')}${esc(heroName(m.hero_id))}</span></td>
+      <td><span class="tag ${m.win ? 'w' : 'l'}">${m.win ? '胜' : '负'}</span></td>
+      <td class="n">${m.kills}/${m.deaths}/${m.assists}</td><td class="n">${fmtDur(m.duration)}</td>
+      <td>${esc(MODE_ZH[m.game_mode] ?? m.game_mode)}</td><td>${esc(LOBBY_ZH[m.lobby_type] ?? m.lobby_type)}</td>
+      <td>${m.pos || '-'}</td><td>${m.party_size == null ? '-' : m.party_size === 1 ? '单排' : m.party_size + ' 人'}</td>
+      <td class="n">${m.gold_per_min ?? '-'}</td><td class="n">${m.xp_per_min ?? '-'}</td><td class="n">${m.hero_damage?.toLocaleString() ?? '-'}</td></tr>
+      ${S.expanded === k ? `<tr class="detail"><td colspan="13" id="detail">加载中…</td></tr>` : ''}`;
+    }).join('')}</table></div>
+    <div class="pager"><button id="pPrev" ${S.page ? '' : 'disabled'}>上一页</button><span class="sub">${S.page + 1} / ${pages}</span><button id="pNext" ${S.page < pages - 1 ? '' : 'disabled'}>下一页</button></div></div>`;
+}
+afterRender.matches = () => {
+  wireSort(S.matchSort);
+  $('#pPrev') && ($('#pPrev').onclick = () => { S.page--; S.expanded = null; render(); });
+  $('#pNext') && ($('#pNext').onclick = () => { S.page++; S.expanded = null; render(); });
+  document.querySelectorAll('tr[data-m]').forEach(tr => tr.onclick = () => {
+    S.expanded = S.expanded === tr.dataset.m ? null : tr.dataset.m; render();
+  });
+  if (S.expanded) { const [id, acc] = S.expanded.split(':'); loadDetail(+id, acc); }
+};
+
+async function getMatch(id, accId) {
+  // Matches of STRATZ accounts come from STRATZ, where the private player is not anonymized.
+  const viaStratz = S.accounts.find(a => a.id === accId)?.stratz;
+  const k = (viaStratz ? 'smatch:' : 'match:') + id;
+  const c = await idb.get(k);
+  if (c) return c;
+  const m = viaStratz ? stratzDetail((await stratz(accId, Q_MATCH, { id })).match) : await api(`/matches/${id}`);
+  // only cache parsed/complete data permanently
+  if (m?.players?.length) await idb.set(k, m);
+  return m;
+}
+async function loadDetail(id, accId) {
+  const target = () => $('#detail');
+  try {
+    const m = await getMatch(id, accId);
+    if (target() && S.expanded?.startsWith(id + ':')) target().innerHTML = detailHtml(m);
+  } catch (e) {
+    if (target()) target().innerHTML = `<span class="err">加载失败:${esc(e.message)}</span>`;
+  }
+}
+function itemImg(id, neutral) {
+  if (!id) return `<span class="it ${neutral ? 'nt' : ''}" style="display:inline-block"></span>`;
+  const it = ITEMS[id];
+  return it?.img ? `<img class="it ${neutral ? 'nt' : ''}" src="${CDN}${esc(it.img)}" data-tip="${esc(it.dname || '')}" alt="" loading="lazy">` : `<span class="it">#${id}</span>`;
+}
+function detailHtml(m) {
+  const own = new Set(S.accounts.map(a => a.id));
+  const team = rad => m.players.filter(p => p.isRadiant === rad || (p.isRadiant == null && (p.player_slot < 128) === rad));
+  const tbl = rad => `<div class="tw"><table>
+    <tr><th>玩家</th><th>英雄</th><th class="n">等级</th><th class="n">K/D/A</th><th class="n">正补/反补</th><th class="n">GPM/XPM</th><th class="n">净值</th><th class="n">英雄伤害</th><th class="n">建筑伤害</th><th class="n">治疗</th><th>物品</th></tr>
+    ${team(rad).map(p => {
+      const isOwn = p.account_id && own.has(String(p.account_id));
+      const nm = p.personaname || (p.account_id ? p.account_id : '匿名');
+      return `<tr class="${isOwn ? 'own' : ''}">
+        <td>${p.account_id ? `<a href="https://www.opendota.com/players/${p.account_id}" target="_blank" rel="noopener">${esc(nm)}</a>` : esc(nm)}${p.rank_tier ? ` <span class="sub">${esc(rankName(p.rank_tier))}</span>` : ''}</td>
+        <td><span class="hero">${heroImg(p.hero_id, 'hs')}${esc(heroName(p.hero_id))}</span></td>
+        <td class="n">${p.level ?? '-'}</td><td class="n">${p.kills}/${p.deaths}/${p.assists}</td>
+        <td class="n">${p.last_hits ?? '-'}/${p.denies ?? '-'}</td><td class="n">${p.gold_per_min ?? '-'}/${p.xp_per_min ?? '-'}</td>
+        <td class="n">${p.net_worth?.toLocaleString() ?? '-'}</td><td class="n">${p.hero_damage?.toLocaleString() ?? '-'}</td>
+        <td class="n">${p.tower_damage?.toLocaleString() ?? '-'}</td><td class="n">${p.hero_healing?.toLocaleString() ?? '-'}</td>
+        <td>${[0, 1, 2, 3, 4, 5].map(i => itemImg(p['item_' + i])).join('')} ${itemImg(p.item_neutral, true)}</td></tr>`;
+    }).join('')}</table></div>`;
+  let gold = '';
+  if (m.radiant_gold_adv?.length > 1) {
+    const W = Math.max(300, ($('#detail')?.clientWidth || 800) - 30);
+    gold = `<div class="sub" style="margin-top:10px">经济优势(天辉为正)</div><div class="chart">${lineChart(W, {
+      H: 160, labels: m.radiant_gold_adv.map((_, i) => i + '分'), refLine: 0,
+      yFmt: v => (Math.abs(v) >= 1000 ? (v / 1000).toFixed(0) + 'k' : v),
+      series: [{ name: '经济差', color: 'var(--c1)', values: m.radiant_gold_adv },
+        ...(m.radiant_xp_adv ? [{ name: '经验差', color: 'var(--c2)', values: m.radiant_xp_adv }] : [])],
+    })}</div>`;
+  }
+  return `<div class="row" style="justify-content:space-between">
+      <div><strong style="color:var(--good)">天辉 ${m.radiant_score ?? ''}</strong> : <strong style="color:var(--bad)">${m.dire_score ?? ''} 夜魇</strong>
+        <span class="tag ${m.radiant_win ? 'w' : 'l'}" style="margin-left:6px">${m.radiant_win ? '天辉胜利' : '夜魇胜利'}</span>
+        <span class="sub"> · ${fmtDur(m.duration)} · ${esc(MODE_ZH[m.game_mode] ?? m.game_mode)} · ${esc(LOBBY_ZH[m.lobby_type] ?? m.lobby_type)} · ${fmtTime(m.start_time)}</span></div>
+      <div class="sub">比赛 ${m.match_id} ·
+        <a href="https://www.opendota.com/matches/${m.match_id}" target="_blank" rel="noopener">OpenDota</a> ·
+        <a href="https://stratz.com/matches/${m.match_id}" target="_blank" rel="noopener">Stratz</a> ·
+        <a href="https://www.dotabuff.com/matches/${m.match_id}" target="_blank" rel="noopener">Dotabuff</a></div>
+    </div>
+    <div class="team-h rad">天辉</div>${tbl(true)}
+    <div class="team-h dire">夜魇</div>${tbl(false)}
+    ${gold}`;
+}
+
+// re-render charts on resize
+let rz;
+addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (['activity', 'trends'].includes(S.tab)) render(); }, 200); });
+
+// ---------- boot ----------
+(function boot() {
+  applyTheme(lsGet('d2.theme', 'auto'));
+  $('#apikey').value = lsGet('d2.apikey', '');
+  const ids = lsGet('d2.ids', []);
+  S.accounts = ids.map(id => ({ id }));
+  if (!lsGet('d2.selected', null)) ids.forEach(id => S.selected.add(id));
+  $('#ids').value = ids.join('\n');
+  renderAccounts();
+  if (ids.length) loadAll(); else { $('#setup').hidden = false; }
+})();
+</script>
+</body>
+</html>
