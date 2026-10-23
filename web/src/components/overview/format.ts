@@ -12,3 +12,9 @@ export function ago(startSec: number, nowMs = Date.now()): string {
   if (d < 365) return `${Math.floor(d / 30)}mo ago`;
   return `${Math.floor(d / 365)}y ago`;
 }
+export function fmtTime(startSec: number): string {
+  const d = new Date(startSec * 1000);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+export const num = (v: number | null | undefined): string => (v == null ? '—' : v.toLocaleString('en-US'));
