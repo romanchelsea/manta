@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type SyncState } from '@/lib/db';
 import { createOpenDotaClient, type OpenDotaClient } from '@/lib/opendota';
-import { loadConstants, syncAccount, type SyncStage } from '@/lib/sync';
+import { loadConstants, removeAccountData, syncAccount, type SyncStage } from '@/lib/sync';
 import { loadSettings } from '@/lib/settings';
 import type { AccountId } from '@/lib/types';
 
@@ -32,7 +32,7 @@ function getClient(apiKey: string): OpenDotaClient {
   return client;
 }
 
-async function runSync(force: boolean): Promise<void> {
+export async function runSync(force: boolean): Promise<void> {
   // Re-read settings so accounts added just now are included.
   const { accounts, apiKey } = loadSettings();
   const c = getClient(apiKey);
@@ -44,7 +44,10 @@ async function runSync(force: boolean): Promise<void> {
     } catch {
       /* constants are retried on the next sync */
     }
+    const stillTracked = (id: AccountId) => loadSettings().accounts.includes(id);
     for (const id of accounts) {
+      // Skip accounts removed while earlier accounts were syncing.
+      if (!stillTracked(id)) continue;
       await syncAccount(id, {
         client: c,
         db,
@@ -54,6 +57,8 @@ async function runSync(force: boolean): Promise<void> {
           emit();
         },
       });
+      // Removed mid-sync: syncAccount may have written rows back after removeAccountData ran.
+      if (!stillTracked(id)) await removeAccountData(db, id);
       stages = { ...stages, [id]: undefined };
       emit();
     }
