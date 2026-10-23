@@ -1,3 +1,4 @@
+import { expect, test } from 'vitest';
 import { MODE_NAMES, LOBBY_NAMES, POSITION_NAMES, rankName, heroImageUrl, itemImageUrl, kda } from './dota';
 
 test('rankName', () => {
