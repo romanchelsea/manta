@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
@@ -18,7 +19,13 @@ export const metadata: Metadata = {
   description: "Match statistics across multiple Dota 2 accounts, powered by OpenDota.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // Reading the request headers opts every route into dynamic rendering, which
+  // the per-request CSP nonce requires. Next.js applies the nonce to its own
+  // scripts automatically; pass this value as the `nonce` prop to any future
+  // <Script> component.
+  (await headers()).get("x-nonce");
+
   return (
     <html
       lang="en"

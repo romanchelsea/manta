@@ -32,3 +32,7 @@ token 只保存在本机的 `tools/stratz-tokens.json`(已加入 .gitignore),代
 - 非 Stratz 账号的位置是根据分路与补刀估算的,只有被 OpenDota 解析过的比赛才有分路信息(其余显示为「未知」)。
 - 非 Stratz 账号的队友数据由 OpenDota 服务端统计,位置、组队、英雄/模式多选等筛选无法应用,页面上会提示。
 - 免费 API 每分钟约 60 次请求,可在设置中填入 OpenDota API Key。
+
+## Web app
+
+`web/` 目录是 Next.js 版本的多账号面板(OpenDota 数据,数据仅存于浏览器)。开发、测试与 Vercel 部署说明见 [web/README.md](web/README.md)。

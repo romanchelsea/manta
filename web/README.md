@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dota 2 Multi-Account Tracker (web)
 
-## Getting Started
+A Next.js app that combines match statistics from several Dota 2 accounts in one place, using the public [OpenDota](https://www.opendota.com) API. Add accounts by Steam/Dota ID, sync their matches, then browse:
 
-First, run the development server:
+- **Overview** (`/`): per-account and combined summary stats.
+- **Matches** (`/matches`): one merged match list with match details.
+- **Activity** (`/activity`): lifetime activity history and charts.
+
+## Privacy
+
+Phase 1 has no server-side storage; your account list and match cache live only in your browser (IndexedDB). Your browser talks to `api.opendota.com` directly.
+
+## Development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev     # http://localhost:3000
+npm test        # Vitest
+npm run lint
+npm run build && npm start   # production check
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Security headers
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`src/proxy.ts` sets a per-request nonce-based Content-Security-Policy plus `Referrer-Policy` and `X-Content-Type-Options`. Nonces need every page rendered per request, so `cacheComponents` / Partial Prerendering are off in `next.config.ts` (the Next.js CSP guide says PPR does not work with nonces).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploy (GitHub + Vercel)
 
-## Learn More
+1. Create a **public** GitHub repository (e.g. `dota2-multi-account-panel`) without a README.
+2. From the repository root, push the code:
+   ```bash
+   git remote add origin https://github.com/<you>/dota2-multi-account-panel.git
+   git push -u origin main   # or the branch you want to deploy
+   ```
+3. In Vercel: **Add New... > Project**, import that repository.
+4. Set **Root Directory** to `web` (framework preset Next.js is detected automatically; default build settings are fine). No environment variables are needed.
+5. Click **Deploy**. After it finishes, open the URL and check the response headers include `content-security-policy`.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Note: Vercel's Hobby plan is for personal, non-commercial use only.
