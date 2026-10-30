@@ -10,13 +10,13 @@ export function RecentStrip({
   const recent = rows.slice(0, 40).reverse();
   return (
     <div>
-      <h3 className="mb-2 mt-4 font-medium">Last {recent.length} matches</h3>
+      <h3 className="mb-2 mt-5 text-sm font-semibold">Last {recent.length} matches</h3>
       <div className="flex flex-wrap gap-1">
         {recent.map((m) => (
           <span key={m.key}
             title={`${fmtTime(m.startTime)}\n${nameOf(m.accountId)} · ${heroName(heroes, m.heroId)}\n${m.win ? 'Win' : 'Loss'} ${m.kills}/${m.deaths}/${m.assists}`}
-            className={cn('inline-flex size-6 items-center justify-center rounded text-xs font-medium text-white',
-              m.win ? 'bg-green-600' : 'bg-red-600')}>
+            className={cn('inline-flex size-6 cursor-default items-center justify-center rounded-md text-xs font-semibold ring-1 ring-inset transition-transform hover:scale-125',
+              m.win ? 'bg-win/15 text-win ring-win/30' : 'bg-loss/15 text-loss ring-loss/30')}>
             {m.win ? 'W' : 'L'}
           </span>
         ))}

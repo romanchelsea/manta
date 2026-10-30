@@ -13,7 +13,7 @@ export function ActivityWindowSelect({
   return (
     <select
       aria-label="Activity window"
-      className="h-8 rounded-md border bg-background px-2 text-sm"
+      className="h-8 rounded-lg border bg-card px-2 text-sm shadow-sm transition-colors hover:border-primary/40"
       value={windowKey(value)}
       onChange={(e) => onChange(parseWindowKey(e.target.value))}
     >

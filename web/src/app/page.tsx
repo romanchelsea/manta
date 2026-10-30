@@ -1,5 +1,6 @@
 'use client';
 import { AppShell } from '@/components/AppShell';
+import { PageSkeleton, Panel } from '@/components/Panel';
 import { AccountTable } from '@/components/overview/AccountTable';
 import { HeroGrid } from '@/components/overview/HeroGrid';
 import { KpiRow } from '@/components/overview/KpiRow';
@@ -17,18 +18,20 @@ export default function Home() {
   const nameOf = (id: string) => profiles[id]?.profile?.name ?? id;
   return (
     <AppShell>
-      {!rows.length ? (
+      {!rows ? (
+        <PageSkeleton />
+      ) : !rows.length ? (
         <p className="py-16 text-center text-muted-foreground">No matches in this time range.</p>
       ) : (
-        <div className="space-y-3">
+        <div className="stagger space-y-4">
           <KpiRow rows={rows} />
           <AccountTable rows={rows} accounts={settings.accounts} profiles={profiles} heroes={heroes} />
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <PositionBars rows={rows} />
-            <div className="rounded-lg border p-3">
+            <Panel>
               <PartyTable rows={rows} />
               <RecentStrip rows={rows} heroes={heroes} nameOf={nameOf} />
-            </div>
+            </Panel>
           </div>
           <HeroGrid rows={rows} heroes={heroes} />
         </div>

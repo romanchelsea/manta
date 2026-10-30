@@ -1,4 +1,6 @@
-# Dota 2 Multi-Account Tracker (web)
+# Manta (web)
+
+Every Dota 2 account you own, in one view.
 
 A Next.js app that combines match statistics from several Dota 2 accounts in one place, using the public [OpenDota](https://www.opendota.com) API. Add accounts by Steam/Dota ID, sync their matches, then browse:
 

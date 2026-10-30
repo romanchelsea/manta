@@ -8,7 +8,8 @@ import type { AccountId, HeroInfo, ItemInfo, MatchRecord, MatchSummary } from '@
 const NO_SUMMARIES: MatchSummary[] = [];
 const NO_RECORDS: MatchRecord[] = [];
 
-export function useSummaries(): MatchSummary[] {
+/** `undefined` while the first IndexedDB read is in flight. */
+export function useSummaries(): MatchSummary[] | undefined {
   const { settings } = useSettings();
   const { selected, range } = settings;
   const key = JSON.stringify([selected, range]);
@@ -18,11 +19,12 @@ export function useSummaries(): MatchSummary[] {
       const [from, to] = timeBounds(range, Date.now() / 1000);
       const rows = await db.summaries.where('accountId').anyOf(selected).toArray();
       return filterRows(rows, { selected: new Set(selected), from, to });
-    }, [key]) ?? NO_SUMMARIES
+    }, [key])
   );
 }
 
-export function useRecords(): MatchRecord[] {
+/** `undefined` while the first IndexedDB read is in flight. */
+export function useRecords(): MatchRecord[] | undefined {
   const { settings } = useSettings();
   const { selected } = settings;
   return (
@@ -30,7 +32,7 @@ export function useRecords(): MatchRecord[] {
       if (!selected.length) return NO_RECORDS;
       const rows = await db.records.where('accountId').anyOf(selected).toArray();
       return rows.sort((a, b) => b.startTime - a.startTime);
-    }, [selected.join(',')]) ?? NO_RECORDS
+    }, [selected.join(',')])
   );
 }
 
@@ -54,7 +56,7 @@ export function useConstants():
   }, []);
 }
 
-const PALETTE = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#84cc16'];
+const PALETTE = ['#8b5cf6', '#ec4899', '#06b6d4', '#f59e0b', '#10b981', '#3b82f6', '#f43f5e', '#84cc16'];
 
 export function accountColor(index: number): string {
   return PALETTE[((index % PALETTE.length) + PALETTE.length) % PALETTE.length];

@@ -26,7 +26,7 @@ export interface AccountBarProps {
 export function AccountBar({ accounts, selected, onToggle, profiles, states, stage }: AccountBarProps) {
   if (!accounts.length) return null;
   return (
-    <div className="flex flex-wrap gap-2 border-b px-4 py-3">
+    <div className="mx-auto flex w-full max-w-7xl flex-wrap gap-2 px-4 pt-4">
       {accounts.map((id, i) => {
         const st = states[id] ?? profiles[id];
         const profile = st?.profile ?? null;
@@ -39,14 +39,16 @@ export function AccountBar({ accounts, selected, onToggle, profiles, states, sta
               aria-pressed={isSelected}
               onClick={() => onToggle(id)}
               className={cn(
-                'flex items-center gap-2 rounded-full border px-3 py-1 text-sm transition-colors',
-                isSelected ? 'bg-secondary text-secondary-foreground' : 'opacity-50 hover:opacity-80',
+                'flex items-center gap-2 rounded-full border px-3 py-1 text-sm transition-all duration-200',
+                isSelected
+                  ? 'border-primary/40 bg-card shadow-sm shadow-primary/10 ring-1 ring-primary/20'
+                  : 'border-dashed text-muted-foreground opacity-60 hover:opacity-100',
               )}
             >
               <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: accountColor(i) }} />
               {profile?.avatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatar} alt="" className="size-5 rounded-full" />
+                <img src={profile.avatar} alt="" className="size-5 rounded-full ring-1 ring-border" />
               ) : null}
               <span className="truncate font-medium">{profile?.name || id}</span>
               {profile ? <span className="text-xs text-muted-foreground">{rankName(profile.rankTier)}</span> : null}

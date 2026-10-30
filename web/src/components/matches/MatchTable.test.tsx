@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, cleanup, fireEvent, within } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent, within, waitFor } from '@testing-library/react';
 
 vi.mock('@/components/charts/EChart', () => ({ EChart: () => null }));
 vi.mock('@/components/matches/MatchDetailView', () => ({
@@ -32,11 +32,17 @@ describe('MatchTable', () => {
     const first = bodyRows()[0];
     expect(within(first).getByText(`${Math.floor(max / 60)}:${String(max % 60).padStart(2, '0')}`)).toBeInTheDocument();
   });
-  it('expands and collapses detail', () => {
+  it('opens detail in a dialog and closes it', async () => {
     render(<MatchTable rows={rows} accounts={['111']} nameOf={() => 'Alpha'} heroes={undefined} />);
     fireEvent.click(bodyRows()[0]);
-    expect(screen.getByTestId('detail')).toHaveTextContent('detail 1');
-    fireEvent.click(bodyRows()[0]);
-    expect(screen.queryByTestId('detail')).toBeNull();
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByTestId('detail')).toHaveTextContent('detail 1');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByTestId('detail')).toBeNull());
+  });
+  it('opens detail from the keyboard', async () => {
+    render(<MatchTable rows={rows} accounts={['111']} nameOf={() => 'Alpha'} heroes={undefined} />);
+    fireEvent.keyDown(bodyRows()[1], { key: 'Enter' });
+    expect(await screen.findByTestId('detail')).toHaveTextContent('detail 2');
   });
 });

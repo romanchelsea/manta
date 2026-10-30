@@ -18,6 +18,8 @@ export function NthGameChart({ nth }: { nth: { n: number; games: number; wins: n
       series: [
         {
           type: 'line', name: 'Win rate', connectNulls: true,
+          // Win rates outside the 30–70% axis are clipped; smoothing would overshoot there.
+          smooth: false,
           data: nth.map((c) => (c.games ? c.wins / c.games : null)),
           markLine: { silent: true, symbol: 'none', data: [{ yAxis: 0.5 }], lineStyle: { type: 'dashed' }, label: { show: false } },
         },

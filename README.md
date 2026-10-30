@@ -35,4 +35,4 @@ token 只保存在本机的 `tools/stratz-tokens.json`(已加入 .gitignore),代
 
 ## Web app
 
-`web/` 目录是 Next.js 版本的多账号面板(OpenDota 数据,数据仅存于浏览器)。开发、测试与 Vercel 部署说明见 [web/README.md](web/README.md)。
+`web/` 目录是 Next.js 版本的多账号面板,网站名为 **Manta**(OpenDota 数据,数据仅存于浏览器)。开发、测试与 Vercel 部署说明见 [web/README.md](web/README.md)。

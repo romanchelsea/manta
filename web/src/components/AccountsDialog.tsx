@@ -69,7 +69,7 @@ export function AccountsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
         </div>
         <ul className="flex max-h-60 flex-col gap-1 overflow-y-auto">
           {settings.accounts.map((id) => (
-            <li key={id} className="flex items-center justify-between rounded border px-3 py-1.5 text-sm">
+            <li key={id} className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-1.5 text-sm transition-colors hover:bg-muted/60">
               <span className="font-mono">{id}</span>
               <Button variant="ghost" size="sm" aria-label={`Remove ${id}`} onClick={() => void onRemove(id)}>
                 Remove

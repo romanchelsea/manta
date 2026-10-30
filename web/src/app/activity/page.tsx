@@ -6,6 +6,7 @@ import { CalendarHeatmap } from '@/components/activity/CalendarHeatmap';
 import { NthGameChart } from '@/components/activity/NthGameChart';
 import { WeekdayTable } from '@/components/activity/WeekdayTable';
 import { WeekHourHeatmap } from '@/components/activity/WeekHourHeatmap';
+import { PageSkeleton, Panel, StatTile } from '@/components/Panel';
 import { fix } from '@/components/overview/format';
 import { useRecords } from '@/hooks/useData';
 import {
@@ -17,22 +18,13 @@ const hmm = (sec: number) => {
   return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
 };
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-lg border p-3">
-      <h3 className="mb-2 text-sm font-medium">{title}</h3>
-      {children}
-    </div>
-  );
-}
-
 export default function ActivityPage() {
   const all = useRecords();
   const [win, setWin] = useState<ActivityWindow>({ kind: 'last12' });
-  const years = useMemo(() => availableYears(all), [all]);
+  const years = useMemo(() => availableYears(all ?? []), [all]);
   const d = useMemo(() => {
     // Records only load client-side; skip `new Date()` during prerender.
-    if (!all.length) return null;
+    if (!all?.length) return null;
     const now = new Date();
     const [from, to] = windowBounds(win, now);
     const records = all.filter((r) => r.startTime >= from && r.startTime <= to);
@@ -62,33 +54,30 @@ export default function ActivityPage() {
           </p>
           <ActivityWindowSelect value={win} years={years} onChange={setWin} />
         </div>
-        {!d || !d.records.length ? (
+        {!all ? (
+          <PageSkeleton />
+        ) : !d || !d.records.length ? (
           <p className="py-16 text-center text-muted-foreground">No matches in this window.</p>
         ) : (
-          <>
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              {kpis.map(([l, v]) => (
-                <div key={l} className="rounded-lg border p-3">
-                  <div className="text-xl font-semibold tabular-nums">{v}</div>
-                  <div className="text-xs text-muted-foreground">{l}</div>
-                </div>
-              ))}
+          <div className="stagger space-y-4">
+            <div className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {kpis.map(([l, v]) => <StatTile key={l} label={l} value={v} />)}
             </div>
-            <Card title={calTitle}>
+            <Panel title={calTitle}>
               <CalendarHeatmap records={d.records} end={d.end} />
-            </Card>
-            <Card title="Weekday × hour">
+            </Panel>
+            <Panel title="Weekday × hour">
               <WeekHourHeatmap grid={d.grid} />
-            </Card>
+            </Panel>
             <div className="grid gap-4 md:grid-cols-2">
-              <Card title="By weekday">
+              <Panel title="By weekday">
                 <WeekdayTable grid={d.grid} />
-              </Card>
-              <Card title="Win rate by nth game of the day (same account)">
+              </Panel>
+              <Panel title="Win rate by nth game of the day (same account)">
                 <NthGameChart nth={d.nth} />
-              </Card>
+              </Panel>
             </div>
-          </>
+          </div>
         )}
       </div>
     </AppShell>
