@@ -3,3 +3,7 @@ stratz-probe-output.json
 .env*
 node_modules/
 .next/
+
+# Local tool files
+.claude/
+.superpowers/
